@@ -28,21 +28,33 @@
         .dash-item { font-size: 14px; color: var(--text-muted); }
         .dash-value { font-size: 48px; color: var(--text-color); font-weight: bold; margin-top: 5px; }
 
-        /* 密碼與表單 */
+        /* 表單與按鈕 */
         .form-group { text-align: center; margin: 20px 0; }
         select, input { background: #334155; border: 1px solid #475569; color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; width: 100%; max-width: 250px; text-align: center; outline: none; }
         button.btn { background: var(--accent-color); color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 6px; cursor: pointer; display: block; margin: 20px auto 0; }
         
-        /* 打字核心區域 */
-        .word-display { font-size: 24px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; letter-spacing: 1px; word-wrap: break-word; min-height: 80px; }
+        /* 打字區域（防止複製反白） */
+        .word-display { 
+            font-size: 24px; 
+            color: var(--text-muted); 
+            line-height: 1.6; 
+            margin-bottom: 25px; 
+            letter-spacing: 1px; 
+            word-wrap: break-word; 
+            min-height: 80px; 
+            user-select: none; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
         .word-display span.correct { color: var(--text-color); }
         .word-display span.current { border-bottom: 2px solid var(--accent-color); color: var(--text-color); }
-        .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; }
+        .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none;}
         .input-field:focus { border-color: var(--accent-color); }
         
-        /* 圖表容器 */
-        .chart-container { width: 100%; height: 18px; margin-top: 30px; }
-        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; }
+        /* 圖表外框 */
+        .chart-container { width: 100%; height: 120px; margin-top: 30px; }
+        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; }
 
         /* 後台表格 */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -106,13 +118,14 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwar4itFOmvn3SBlbKxfw-w2flyth4jqF19SRSJogxU__SzCQLdxLD58xzggnPWFq8/exec"; // 請替換成您的 Apps Script 網頁應用程式網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbx0M3mpVjNEKbk6GRHMd5vawLg4ws9ElKnFW-8f7vKaJbzcEQnhMZbgTpseo20sZsYj/exec"; 
 
     const sentences = [
         "It is better to fail in originality than to succeed in imitation.",
         "The quick brown fox jumps over the lazy dog.",
         "Success is not final failure is not fatal it is the courage to continue.",
-        "Beautiful things happen when you distance yourself from negativity."
+        "Beautiful things happen when you distance yourself from negativity.",
+        "Learning to code opens up a whole new world of creative possibilities."
     ];
 
     let currentSeatNumber = "";
@@ -121,13 +134,13 @@
     let timerInterval = null;
     let isTestActive = false;
     
-    // 紀錄每秒打字數據，用於演示播放
     let speedHistory = []; 
     let secondsElapsed = 0;
 
     let liveChart = null;
     let playbackChart = null;
     let playbackInterval = null;
+    let globalAdminData = [];
 
     // 初始化座號 (1-50)
     const seatSelect = document.getElementById('seatNumber');
@@ -142,14 +155,13 @@
         document.getElementById(pageId).classList.add('active');
     }
 
-    // 後台密碼驗證
+    // 後台驗證
     function handleNavClick() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
             let pass = prompt("請輸入後台管理密碼：");
             if (!pass) return;
 
-            // 向後台驗證密碼
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "checkPassword", password: pass }),
@@ -165,13 +177,7 @@
                     alert("密碼錯誤！");
                 }
             }).catch(() => {
-                // 如果尚未設定 API_URL，暫時允許預設密碼 school1234 登入本地
-                if(pass === "school1234") {
-                    btn.textContent = "返回測試";
-                    showPage('adminPage');
-                } else {
-                    alert("驗證失敗，請檢查 API 設定或密碼。");
-                }
+                alert("通訊失敗，請確認第一步的 Apps Script 網址是否正確填入。");
             });
         } else {
             btn.textContent = "切換至後台";
@@ -185,6 +191,16 @@
         showPage('testPage');
         initLiveChart();
         loadSentence();
+        
+        const inputField = document.getElementById('typingInput');
+        
+        // 🚫 嚴格防止複製、貼上與滑鼠拖曳行為
+        inputField.addEventListener('paste', function(e) {
+            e.preventDefault();
+            alert("系統偵測到貼上行為！請誠實自行打字。");
+        });
+        inputField.addEventListener('copy', function(e) { e.preventDefault(); });
+        inputField.addEventListener('drop', function(e) { e.preventDefault(); });
     }
 
     function loadSentence() {
@@ -203,9 +219,9 @@
         clearInterval(timerInterval);
         document.getElementById('timer').textContent = "0";
         document.getElementById('liveWpm').textContent = "0";
+        document.getElementById('liveAcc').textContent = "100%";
     }
 
-    // 渲染高亮文字（處理打對、打錯顏色）
     function renderText(inputVal) {
         const display = document.getElementById('sentenceDisplay');
         display.innerHTML = "";
@@ -215,8 +231,8 @@
                 if (inputVal[i] === targetSentence[i]) {
                     span.classList.add('correct');
                 } else {
-                    span.style.color = '#f87171'; // 錯誤紅色
-                    span.style.backgroundColor = 'rgba(248,113,113,0.2)';
+                    span.style.color = '#f87171';
+                    span.style.backgroundColor = 'rgba(248,113,113,0.1)';
                 }
             } else if (i === inputVal.length) {
                 span.classList.add('current');
@@ -238,12 +254,11 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
-        // 完美匹配通關
         if (inputVal === targetSentence) {
             clearInterval(timerInterval);
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
-            let finalWpm = Math.round((targetSentence.length / 5) / finalTime);
+            let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
             
             alert(`測試完成！速度：${finalWpm} WPM。正在自動上傳紀錄...`);
             submitScore(currentSeatNumber, finalWpm, speedHistory);
@@ -259,7 +274,6 @@
         document.getElementById('liveWpm').textContent = wpm;
         document.getElementById('timer').textContent = secondsElapsed;
 
-        // 計算精確度
         let correctChars = 0;
         for(let i=0; i<inputVal.length; i++) {
             if(inputVal[i] === targetSentence[i]) correctChars++;
@@ -267,7 +281,6 @@
         let acc = inputVal.length > 0 ? Math.round((correctChars / inputVal.length) * 100) : 100;
         document.getElementById('liveAcc').textContent = acc + "%";
 
-        // 更新前台即時圖表數據
         speedHistory.push(wpm);
         liveChart.data.labels.push(secondsElapsed);
         liveChart.data.datasets[0].data.push(wpm);
@@ -292,7 +305,10 @@
         })
         .then(res => res.json())
         .then(data => {
-            if(data.status === "success") { alert("成績上傳成功！"); loadSentence(); }
+            if(data.status === "success") { 
+                alert("成績同步成功！"); 
+                loadSentence(); 
+            }
         });
     }
 
@@ -303,28 +319,33 @@
 
     // ================= 後台核心邏輯 =================
 
-    let globalAdminData = [];
-
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = `<tr><td colspan="3">正在即時讀取資料庫...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
 
         fetch(API_URL)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error();
+            return res.json();
+        })
         .then(data => {
-            globalAdminData = data;
+            globalAdminData = data; // 存下原始陣列
             tbody.innerHTML = "";
             if(data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3">目前尚無學生成績。</td></tr>`;
                 return;
             }
             
-            // 最新排最前
-            data.reverse();
+            // 最新提交的成績排在最上面
+            let displayData = [...data].reverse();
 
-            data.forEach((row, index) => {
+            displayData.forEach((row, index) => {
                 let tr = document.createElement('tr');
-                tr.onclick = () => playStudentDemo(index); // 點擊觸發動態撥放
+                
+                // 計算對應回原始 globalAdminData 的索引，確保動態圖播放正確
+                let originalIndex = data.length - 1 - index;
+                tr.onclick = () => playStudentDemo(originalIndex); 
+                
                 tr.innerHTML = `
                     <td>${row.timestamp}</td>
                     <td>${row.number} 號</td>
@@ -333,31 +354,29 @@
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗，請確認第一步的 API 是否部署成功。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已發布「新版本」，且權限設為「所有人」。</td></tr>`;
         });
     }
 
-    // 播放學生的打字動態演示圖
     function playStudentDemo(index) {
         clearInterval(playbackInterval);
         document.getElementById('adminChartBox').style.display = "block";
         
         const student = globalAdminData[index];
-        document.getElementById('chartTitle').textContent = `${student.number} 號同學 打字速度模擬播放中 (最終：${student.wpm} WPM)`;
+        document.getElementById('chartTitle').textContent = `${student.number} 號同學 打字速度模擬播放中 (最終速度：${student.wpm} WPM)`;
 
         const historyData = student.history || [0];
         
-        // 初始化播放圖表
         if(playbackChart) playbackChart.destroy();
         const ctx = document.getElementById('adminPlaybackChart').getContext('2d');
         playbackChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [0], datasets: [{ label: 'WPM (字數/分)', data: [0], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)', fill: true, tension: 0.2 }] },
+            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)', fill: true, tension: 0.2 }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 120 } } }
         });
 
         let currentTick = 1;
-        // 動態模擬當時打字波動效果
+        // 模擬當時每秒的速度增長，重現打字動態
         playbackInterval = setInterval(() => {
             if (currentTick < historyData.length) {
                 playbackChart.data.labels.push(currentTick + "秒");
@@ -365,9 +384,9 @@
                 playbackChart.update();
                 currentTick++;
             } else {
-                clearInterval(playbackInterval); // 播放完畢
+                clearInterval(playbackInterval);
             }
-        }, 300); // 300毫秒動態前進一格秒數，模擬動態感
+        }, 300); // 每 300 毫秒渲染一格，提供流暢的縮時演示感
     }
 </script>
 </body>
