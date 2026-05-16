@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學校英文打字速度測試系統</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --correct-color: #4ade80;
+            --wrong-color: #f87171;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .container { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; width: 100%; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .nav-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+        .nav-btn:hover { background: var(--accent-color); color: #000; }
+
+        h2 { text-align: center; margin-bottom: 20px; color: var(--accent-color); }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* 表單與按鈕 */
+        .form-group { margin-bottom: 20px; text-align: center; }
+        select, input[type="text"] { background: #334155; border: 1px solid #475569; color: #fff; padding: 10px; font-size: 16px; border-radius: 8px; width: 100%; max-width: 200px; text-align: center; outline: none; }
+        button.btn { background: var(--accent-color); color: #0f172a; border: none; padding: 10px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: block; margin: 15px auto 0; transition: 0.2s; }
+        button.btn:hover { opacity: 0.9; transform: scale(1.02); }
+
+        /* 打字區域 */
+        .word-display { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; margin-bottom: 15px; font-size: 20px; line-height: 1.5; letter-spacing: 1px; word-wrap: break-word; user-select: none; }
+        .input-field { width: 100%; background: #1e293b; border: 2px solid #475569; border-radius: 8px; padding: 12px; color: #fff; font-size: 18px; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: var(--accent-color); }
+        .stats { display: flex; justify-content: space-around; margin-top: 15px; font-size: 18px; font-weight: bold; }
+
+        /* 後台表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: #334155; color: var(--accent-color); }
+        tr:hover { background: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="nav-btn" id="toggleModeBtn" onclick="toggleMode()">切換至後台</button>
+
+    <!-- 頁面 1：選擇座號 -->
+    <div id="loginPage" class="page active">
+        <h2>英文打字能力測試</h2>
+        <div class="form-group">
+            <label for="seatNumber" style="display:block; margin-bottom:10px;">請選擇你的座號：</label>
+            <select id="seatNumber"></select>
+            <button class="btn" onclick="startTest()">開始測試</button>
+        </div>
+    </div>
+
+    <!-- 頁面 2：打字測試 -->
+    <div id="testPage" class="page">
+        <h2>測試中... 座號: <span id="currentSeat" style="color:var(--accent-color);"></span></h2>
+        <div class="word-display" id="sentenceDisplay">載入中...</div>
+        <input type="text" id="typingInput" class="input-field" placeholder="點擊此處並開始打字..." autocomplete="off" disabled>
+        <div class="stats">
+            <div>時間: <span id="timer">0</span> 秒</div>
+            <div>目前速度: <span id="liveWpm">0</span> WPM</div>
+        </div>
+        <button class="btn" id="nextBtn" onclick="nextSentence()" style="display: none;">下一題</button>
+    </div>
+
+    <!-- 頁面 3：後台數據 -->
+    <div id="adminPage" class="page">
+        <h2>班級打字速度後台紀錄</h2>
+        <div style="text-align: center;"><button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin-bottom:15px;">重新整理數據</button></div>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>測試時間</th>
+                        <th>座號</th>
+                        <th>打字速度 (WPM)</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                    <tr><td colspan="3">暫無資料，請點擊重新整理</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 請在此處填入您的 Google Apps Script 網頁應用程式 URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyndnI7YiYaREn-vC3gFmS-Z6fJR_sp6rL1qVrdNjBOfqvu8pwKE8s4W311kmnoNxDp/exec";
+
+    // 隨機英文句子庫
+    const sentences = [
+        "The quick brown fox jumps over the lazy dog.",
+        "Success is not final failure is not fatal it is the courage to continue that counts.",
+        "An apple a day keeps the doctor away.",
+        "Technology is best when it brings people together.",
+        "Practice makes perfect so keep trying your best every single day.",
+        "Beautiful things happen when you distance yourself from negativity.",
+        "Learning to code opens up a whole new world of creative possibilities.",
+        "Believe you can and you are halfway there to achieving your goals."
+    ];
+
+    let currentSeatNumber = "";
+    let targetSentence = "";
+    let startTime = null;
+    let timerInterval = null;
+    let isTestActive = false;
+
+    // 初始化座號選單（1-50號）
+    const seatSelect = document.getElementById('seatNumber');
+    for(let i = 1; i <= 50; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i + " 號";
+        seatSelect.appendChild(opt);
+    }
+
+    // 頁面切換
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+    }
+
+    function toggleMode() {
+        const btn = document.getElementById('toggleModeBtn');
+        if (btn.textContent === "切換至後台") {
+            btn.textContent = "返回測試";
+            showPage('adminPage');
+            fetchAdminData();
+        } else {
+            btn.textContent = "切換至後台";
+            resetTestSystem();
+            showPage('loginPage');
+        }
+    }
+
+    function resetTestSystem() {
+        clearInterval(timerInterval);
+        document.getElementById('typingInput').value = "";
+        document.getElementById('typingInput').disabled = true;
+        document.getElementById('timer').textContent = "0";
+        document.getElementById('liveWpm').textContent = "0";
+        isTestActive = false;
+    }
+
+    // 開始打字測試
+    function startTest() {
+        currentSeatNumber = seatSelect.value;
+        document.getElementById('currentSeat').textContent = currentSeatNumber;
+        showPage('testPage');
+        loadNewSentence();
+        
+        // 啟用輸入框並聚焦
+        const inputField = document.getElementById('typingInput');
+        inputField.disabled = false;
+        inputField.focus();
+        
+        // 綁定打字事件
+        inputField.addEventListener('input', handleTyping);
+    }
+
+    function loadNewSentence() {
+        targetSentence = sentences[Math.floor(Math.random() * sentences.length)];
+        document.getElementById('sentenceDisplay').textContent = targetSentence;
+        document.getElementById('typingInput').value = "";
+        resetTestSystem();
+        // 重新啟用輸入框
+        document.getElementById('typingInput').disabled = false;
+        document.getElementById('typingInput').focus();
+    }
+
+    function handleTyping() {
+        const inputVal = document.getElementById('typingInput').value;
+        
+        // 第一次輸入時啟動計時器
+        if (!isTestActive && inputVal.length > 0) {
+            isTestActive = true;
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // 計算即時 WPM (每5個字元算一個單字)
+        if (isTestActive) {
+            let timeElapsed = (new Date() - startTime) / 1000 / 60; // 分鐘
+            if (timeElapsed > 0) {
+                let wpm = Math.round((inputVal.length / 5) / timeElapsed);
+                document.getElementById('liveWpm').textContent = wpm;
+            }
+        }
+
+        // 檢查是否完全吻合句子
+        if (inputVal === targetSentence) {
+            clearInterval(timerInterval);
+            document.getElementById('typingInput').disabled = true;
+            let finalTime = (new Date() - startTime) / 1000 / 60;
+            let finalWpm = Math.round((targetSentence.length / 5) / finalTime);
+            
+            alert(`恭喜完成！你的速度是 ${finalWpm} WPM。正在上傳成績...`);
+            submitScore(currentSeatNumber, finalWpm);
+        }
+    }
+
+    function updateTimer() {
+        let timeElapsed = Math.floor((new Date() - startTime) / 1000);
+        document.getElementById('timer').textContent = timeElapsed;
+    }
+
+    // 將成績傳送到後台 Google Sheet
+    function submitScore(seat, wpm) {
+        if(API_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+            alert("尚未設定 API 網址，成績僅顯示在前端。");
+            return;
+        }
+
+        fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ number: seat, wpm: wpm }),
+            headers: { "Content-Type": "text/plain" } // 避免 CORS 預檢請求問題
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "success") {
+                alert("成績上傳成功！即將刷新載入新句子。");
+                loadNewSentence();
+            }
+        })
+        .catch(err => console.error("上傳失敗:", err));
+    }
+
+    // 從後台獲取所有成績並重新顯示
+    function fetchAdminData() {
+        const tbody = document.getElementById('adminTableBody');
+        tbody.innerHTML = `<tr><td colspan="3">正在即時更新數據中...</td></tr>`;
+
+        if(API_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+            tbody.innerHTML = `<tr><td colspan="3" style="color:var(--wrong-color);">請先將程式碼中的 API_URL 替換為 Apps Script 部署網址</td></tr>`;
+            return;
+        }
+
+        fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+            tbody.innerHTML = "";
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3">目前沒有任何測試紀錄。</td></tr>`;
+                return;
+            }
+            
+            // 依時間從新到舊排序
+            data.reverse();
+
+            data.forEach(row => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.timestamp}</td>
+                    <td>${row.number} 號</td>
+                    <td style="color:var(--accent-color); font-weight:bold;">${row.wpm}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            console.error("讀取失敗:", err);
+            tbody.innerHTML = `<tr><td colspan="3" style="color:var(--wrong-color);">數據讀取失敗，請檢查網址或權限設定。</td></tr>`;
+        });
+    }
+</script>
+
+</body>
+</html>
