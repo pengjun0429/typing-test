@@ -3,21 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python 3關程式碼挑戰系統</title>
+    <title>Python Code 挑戰賽 | 進階打字系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* =========================================
+           🎨 高級美化版核心變數 (好看點！)
+           ========================================= */
         :root {
-            --bg-color: #0b1329;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --accent-color: #ffd43b; /* Python 經典黃 */
-            --accent-glow: rgba(255, 212, 59, 0.4);
-            --text-color: #f8fafc;
+            /* 🌌 暗色模式 - 頂級深邃藍 */
+            --bg-gradient: radial-gradient(circle at 10% 20%, rgba(15, 23, 42, 1) 0%, rgba(11, 19, 36, 1) 90.1%);
+            --card-bg: rgba(30, 41, 59, 0.5); /* 更輕薄的玻璃 */
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text-color: #f1f5f9;
             --text-muted: #94a3b8;
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.06);
+            --word-display-bg: rgba(15, 23, 42, 0.8);
+            --word-display-untyped: #475569;
+            --table-hover: rgba(255, 255, 255, 0.03);
+            --glass-overlay-bg: rgba(4, 6, 12, 0.8);
+            --glass-card-bg: rgba(30, 41, 59, 0.4);
+            --glass-card-msg: #cbd5e1;
+            
+            /* ✨ 固定特徵色 - 活力黃 & 霓虹藍 */
+            --accent-color: #fbbf24; /* 更鮮豔的琥珀黃 */
+            --accent-glow: rgba(251, 191, 36, 0.3);
+            --info-color: #38bdf8; /* 科技藍 */
+            --info-glow: rgba(56, 189, 248, 0.3);
+            --success-color: #4ade80; /* 霓虹綠 */
+            --error-color: #f87171; /* 活力紅 */
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+
+        /* ☀️ 亮色模式 - 珠光柔白 */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.5);
+            --card-border: rgba(15, 23, 42, 0.05);
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: rgba(15, 23, 42, 0.1);
+            --word-display-bg: rgba(255, 255, 255, 0.7);
+            --word-display-untyped: #94a3b8;
+            --table-hover: rgba(15, 23, 42, 0.03);
+            --glass-overlay-bg: rgba(241, 245, 249, 0.8);
+            --glass-card-bg: rgba(255, 255, 255, 0.6);
+            --glass-card-msg: #475569;
+            
+            --accent-color: #d97706; /* 亮色下更有質感的深黃 */
+            --accent-glow: rgba(217, 119, 6, 0.1);
+            --success-color: #16a34a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Fira Code', 'Courier New', monospace; }
         
         body { 
-            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            background: var(--bg-gradient);
             color: var(--text-color); 
             display: flex; 
             justify-content: center; 
@@ -25,216 +66,274 @@
             min-height: 100vh; 
             padding: 20px; 
             overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
         }
 
-        /* 主容器 - 磨砂玻璃效果 */
+        /* 主容器 - 極致磨砂玻璃 */
         .container { 
             background: var(--card-bg); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 40px; 
-            border-radius: 20px; 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 50px 40px; 
+            border-radius: 24px; 
             width: 100%; 
-            max-width: 850px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 900px; 
+            box-shadow: 0 25px 80px rgba(0,0,0,0.15); 
+            border: 1px solid var(--card-border);
             position: relative; 
+            transition: all 0.4s ease;
+        }
+        [data-theme="dark"] .container {
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
         }
 
+        /* 高級樣式按鈕 */
         .nav-btn { 
             position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(255,255,255,0.1); 
+            top: 25px; 
+            right: 25px; 
+            background: rgba(15, 23, 42, 0.1); 
+            border: 1px solid var(--card-border); 
             color: var(--text-color); 
-            padding: 8px 16px; 
-            border-radius: 8px; 
+            padding: 10px 20px; 
+            border-radius: 12px; 
             cursor: pointer; 
-            font-family: sans-serif; 
+            font-size: 14px;
+            font-weight: 500;
             backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .nav-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-glow); border-color: var(--accent-color); }
+        .nav-btn:hover { 
+            background: var(--info-color); 
+            color: #fff; 
+            box-shadow: 0 0 20px var(--info-glow); 
+            border-color: var(--info-color); 
+            transform: translateY(-2px);
+        }
         
-        h2 { text-align: center; margin-bottom: 25px; font-weight: 600; font-family: sans-serif; letter-spacing: 1px; color: #fff;}
+        /* 🌗 主題切換按鈕 */
+        .theme-btn {
+            position: absolute;
+            top: 25px;
+            right: 160px; /* 避開後台按鈕 */
+            background: rgba(15, 23, 42, 0.1);
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .theme-btn:hover { 
+            background: var(--text-color); 
+            color: var(--card-bg); 
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        /* 標題樣式 */
+        h2 { 
+            text-align: center; 
+            margin-bottom: 35px; 
+            font-weight: 700; 
+            font-size: 28px;
+            letter-spacing: -0.5px; 
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--text-color) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] h2 {
+             background: linear-gradient(135deg, #1e293b 0%, #64748b 100%);
+             -webkit-background-clip: text;
+             -webkit-text-fill-color: transparent;
+        }
+
         .page { display: none; }
-        .page.active { display: block; }
+        .page.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 儀表板與進度條 */
-        .dashboard { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
-        .dash-item { font-size: 14px; color: var(--text-muted); }
-        .dash-value { font-size: 36px; color: var(--text-color); font-weight: bold; margin-top: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        
-        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 15px; font-family: sans-serif; text-shadow: 0 0 8px var(--accent-glow); }
-
-        /* 表單與按鈕 */
-        .form-group { text-align: center; margin: 20px 0; font-family: sans-serif; }
-        select, input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 14px; font-size: 16px; border-radius: 8px; width: 100%; max-width: 280px; text-align: center; outline: none; transition: all 0.3s; }
-        select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 10px var(--accent-glow); }
-        
-        button.btn { background: linear-gradient(135deg, #ffd43b, #ffa500); color: #000; border: none; padding: 14px 35px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: block; margin: 25px auto 0; font-family: sans-serif; box-shadow: 0 5px 15px rgba(255, 212, 59, 0.3); transition: all 0.3s; }
-        button.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 212, 59, 0.5); }
-        button.btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
-        
-        /* 打字區域 */
-        .word-display { 
-            font-size: 20px; 
-            color: #475569; 
-            line-height: 1.6; 
-            margin-bottom: 25px; 
-            letter-spacing: 1px; 
-            word-wrap: break-word; 
-            min-height: 80px; 
-            white-space: pre-wrap;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid var(--accent-color);
-            user-select: none; -webkit-user-select: none; -moz-user-select: none;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+        /* 儀表板與卡片樣式 */
+        .dashboard { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; text-align: center; flex-wrap: wrap; }
+        .dash-card {
+            background: rgba(15, 23, 42, 0.1);
+            border: 1px solid var(--card-border);
+            padding: 20px 30px;
+            border-radius: 16px;
+            min-width: 160px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.3s ease;
         }
-        .word-display span.correct { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); } 
-        .word-display span.current { background-color: rgba(255, 212, 59, 0.3); color: var(--text-color); border-radius: 2px; }
+        .dash-card:hover { transform: translateY(-5px); }
+        .dash-item { font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;}
+        .dash-value { font-size: 42px; color: var(--text-color); font-weight: 800; text-shadow: 0 0 15px rgba(128,128,128,0.1); }
         
-        .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none; transition: border-color 0.3s; }
-        .input-field:focus { border-color: var(--accent-color); }
+        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-glow); }
+
+        /* 表單與輸入框 */
+        .form-group { text-align: center; margin: 30px 0; }
+        select, input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 16px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.02); }
+        select option { color: #000; background: #fff; }
+
+        /* 漸層挑戰按鈕 */
+        button.btn { 
+            background: linear-gradient(135deg, var(--accent-color), #f97316); 
+            color: #fff; 
+            border: none; 
+            padding: 16px 40px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            display: block; 
+            margin: 30px auto 0; 
+            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        button.btn:hover { 
+            transform: translateY(-3px) scale(1.03); 
+            box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); 
+        }
+        button.btn:active { transform: translateY(-1px); }
+        button.btn:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
         
-        /* 📈 後台虛擬打字機重播區樣式 */
+        /* 打字區域 - 現代代碼樣式 */
+        .word-display { 
+            font-size: 22px; 
+            color: var(--word-display-untyped); 
+            line-height: 1.7; 
+            margin-bottom: 30px; 
+            letter-spacing: 0.5px; 
+            word-wrap: break-word; 
+            min-height: 90px; 
+            white-space: pre-wrap;
+            background: var(--word-display-bg);
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 5px solid var(--accent-color);
+            user-select: none;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .word-display::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none; border-radius: 16px;
+        }
+
+        .word-display span.correct { color: var(--success-color); text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); } 
+        [data-theme="light"] .word-display span.correct { color: #16a34a; text-shadow: none; }
+        
+        .word-display span.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.15); border-radius: 3px; }
+
+        .word-display span.current { background-color: rgba(251, 191, 36, 0.3); color: var(--text-color); border-radius: 3px; border-bottom: 2px solid var(--accent-color); }
+        [data-theme="light"] .word-display span.current { background-color: rgba(251, 191, 36, 0.2); }
+        
+        /* 下方輸入框 */
+        .input-field { 
+            width: 100%; max-width: 100%; background: transparent; 
+            border: none; border-bottom: 3px solid var(--input-border); border-radius: 0; 
+            padding: 12px 0; font-size: 24px; text-align: left; 
+            color: var(--text-color); outline: none; 
+            transition: border-color 0.3s, box-shadow 0.3s; 
+        }
+        .input-field:focus { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(251, 191, 36, 0.05); }
+        
+        /* 📈 後台重播區樣式美化 */
         .admin-playback-box { 
             display: none; 
-            background: rgba(15, 23, 42, 0.9); 
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px solid rgba(255, 212, 59, 0.3); 
-            margin-top: 20px; 
-            box-shadow: 0 0 20px rgba(255, 212, 59, 0.1);
+            background: var(--word-display-bg); 
+            padding: 25px; 
+            border-radius: 16px; 
+            border: 1px solid var(--input-border); 
+            margin-top: 30px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            animation: slideInUp 0.4s ease;
         }
+        @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .playback-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--input-border); padding-bottom: 10px; }
+        .playback-title-text { color: var(--accent-color); font-weight: 600; font-size: 16px; font-family: sans-serif; }
+
         .playback-monitor {
-            font-size: 24px;
-            background: #050b14;
-            padding: 15px;
-            border-radius: 8px;
-            min-height: 70px;
+            font-size: 22px;
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 80px;
             margin: 15px 0;
-            color: #4ade80;
-            border-left: 4px solid #38bdf8;
+            color: var(--success-color);
+            border-left: 4px solid var(--info-color);
             letter-spacing: 1px;
             white-space: pre-wrap;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
         }
+        [data-theme="light"] .playback-monitor { color: #16a34a; }
 
-        /* 🎛️ 整合後的「按鈕切換」控制列樣式 */
         .playback-controls-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin: 15px 0;
-            flex-wrap: wrap;
-            font-family: sans-serif;
+            display: flex; justify-content: center; align-items: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; font-family: sans-serif;
         }
         .playback-controls-row .label { color: var(--text-muted); font-size: 14px; }
         
-        /* 關卡切換微調小按鈕 */
         .level-toggle-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(15, 23, 42, 0.05);
+            border: 1px solid var(--input-border);
             color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
-        .level-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
+        .level-toggle-btn:hover { background: rgba(15, 23, 42, 0.1); color: var(--text-color); }
         .level-toggle-btn.active {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: #38bdf8;
-            color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-            font-weight: bold;
+            background: var(--info-color);
+            border-color: var(--info-color);
+            color: #fff;
+            box-shadow: 0 4px 12px var(--info-glow);
+            font-weight: 600;
         }
 
-        /* 動態虛擬光標 */
-        .playback-cursor {
-            display: inline-block;
-            width: 10px;
-            background-color: #38bdf8;
-            animation: blink 0.8s infinite;
-            margin-left: 2px;
-        }
+        .playback-cursor { display: inline-block; width: 10px; background-color: var(--info-color); animation: blink 0.8s infinite; margin-left: 2px; }
         .playback-cursor.stopped { animation: none; background-color: transparent; }
         
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
+        .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); border-top: 1px solid var(--input-border); padding-top: 15px; }
+        .playback-dash span b { color: var(--text-color); font-size: 18px; font-weight: 700; margin-left: 5px; }
 
-        .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); }
-        .playback-dash span b { color: #fff; font-size: 18px; }
+        /* 圖表樣式 */
+        .chart-container { width: 100%; height: 140px; margin-top: 35px; border-top: 1px solid var(--input-border); padding-top: 15px; }
+        
+        /* 表格樣式美化 */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-family: sans-serif; font-size: 15px; }
+        th, td { padding: 18px 15px; text-align: center; border-bottom: 1px solid var(--card-border); }
+        th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
+        tbody tr { cursor: pointer; transition: background 0.3s; }
+        tbody tr:hover { background: var(--table-hover); }
+        tbody td { color: var(--text-color); }
+        tbody td b { color: var(--text-color); }
 
-        /* 圖表與後台列表 */
-        .chart-container { width: 100%; height: 120px; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
-        th, td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: var(--text-muted); font-weight: normal; }
-        tbody tr { cursor: pointer; transition: background 0.2s; }
-        tbody tr:hover { background: rgba(255,255,255,0.03); }
-
-        /* 全螢幕磨砂玻璃覆蓋層 */
-        .glass-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(10, 15, 30, 0.7); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+        /* 彈窗樣式美化 */
+        .glass-overlay { z-index: 10000; }
+        .glass-card { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s; }
+        
+        .password-style { 
+            border-color: var(--info-color); 
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px var(--info-glow); 
         }
-        .glass-overlay.active { opacity: 1; pointer-events: auto; }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
-            padding: 35px 40px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .glass-overlay.active .glass-card { transform: scale(1); }
-        
-        .password-style { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15); }
-        .password-style .glass-title { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-        
-        .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; text-shadow: 0 0 10px rgba(255, 212, 59, 0.4); }
-        .glass-msg { font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
+        .password-style .glass-title { color: var(--info-color); text-shadow: 0 0 10px var(--info-glow); }
         
         .glass-btn {
-            background: linear-gradient(135deg, #ffd43b, #ffb800);
-            color: #000; border: none; padding: 12px 30px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 212, 59, 0.3); transition: all 0.2s; font-family: sans-serif; display: inline-block; margin: 5px;
+            background: linear-gradient(135deg, var(--accent-color), #f97316);
+            padding: 14px 35px; border-radius: 10px; font-weight: 600; font-size: 14px;
         }
-        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 212, 59, 0.5); }
-        .glass-btn.btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
-        .glass-btn.btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .glass-btn.btn-secondary { background: rgba(15,23,42,0.05); }
     </style>
 </head>
-<body>
+<body data-theme="dark">
+
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="切換深/淺色模式">☀️</button>
 
 <div class="glass-overlay" id="glassAlert">
     <div class="glass-card">
@@ -246,14 +345,14 @@
 
 <div class="glass-overlay" id="glassPasswordOverlay">
     <div class="glass-card password-style">
-        <div class="glass-title">安全身分驗證</div>
-        <div class="glass-msg">請在下方輸入後台管理密碼以進入系統：</div>
+        <div class="glass-title">🔐 安全身分驗證</div>
+        <div class="glass-msg">此區域需要管理員權限。請輸入後台管理密碼：</div>
         <div class="form-group">
-            <input type="password" id="adminPasswordInput" placeholder="請輸入管理密碼..." style="max-width: 100%; margin-bottom: 20px;">
+            <input type="password" id="adminPasswordInput" placeholder="在此輸入密碼..." style="max-width: 100%; margin-bottom: 20px;">
         </div>
-        <div style="display: flex; justify-content: center; gap: 10px;">
+        <div style="display: flex; justify-content: center; gap: 12px;">
             <button class="glass-btn btn-secondary" onclick="closePasswordPanel()">取消</button>
-            <button class="glass-btn" onclick="submitAdminPassword()" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">登入</button>
+            <button class="glass-btn" onclick="submitAdminPassword()" style="background: linear-gradient(135deg, var(--info-color), #0284c7); box-shadow: 0 4px 15px var(--info-glow);">登入後台</button>
         </div>
     </div>
 </div>
@@ -262,22 +361,32 @@
     <button class="nav-btn" id="toggleModeBtn" onclick="openPasswordPanel()">切換至後台</button>
 
     <div id="loginPage" class="page active">
-        <h2>選擇座號 (1-29 號) 連續 Python 測試</h2>
+        <h2>🐍 Python Code 打字挑戰賽</h2>
         <div class="form-group">
+            <p style="color: var(--text-muted); margin-bottom: 15px; font-family: sans-serif;">請選擇您的座號開始挑戰：</p>
             <select id="seatNumber"></select>
-            <button class="btn" id="startBtn" onclick="startTest()">開始 3 關挑戰測試</button>
+            <button class="btn" id="startBtn" onclick="startTest()">開始 3 關連續測試</button>
         </div>
     </div>
 
     <div id="testPage" class="page">
         <div class="progress-box" id="progressDisplay">目前關卡: 1 / 3</div>
         <div class="dashboard">
-            <div class="dash-item">本關 WPM<div class="dash-value" id="liveWpm">0</div></div>
-            <div class="dash-item">精確度<div class="dash-value" id="liveAcc">100%</div></div>
-            <div class="dash-item">本關時間<div class="dash-value" id="timer">0</div></div>
+            <div class="dash-card">
+                <div class="dash-item">本關速度 WPM</div>
+                <div class="dash-value" id="liveWpm" style="color: var(--accent-color);">0</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-item">精確度</div>
+                <div class="dash-value" id="liveAcc" style="color: var(--success-color);">100%</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-item">已過時間</div>
+                <div class="dash-value" id="timer">0</div>
+            </div>
         </div>
         <div class="word-display" id="sentenceDisplay"></div>
-        <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方小寫 python 程式碼..." autocomplete="off" disabled>
+        <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方的代碼..." autocomplete="off" disabled>
         
         <div class="chart-container">
             <canvas id="liveChart"></canvas>
@@ -285,16 +394,19 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>班級 Python 3 關挑戰紀錄後台</h2>
-        <div style="text-align: center;">
-            <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px;">重新整理數據</button>
+        <h2>📊 班級挑戰紀錄後台</h2>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px; padding: 12px 25px; font-size: 14px;">🔄 重新整理數據</button>
         </div>
         
         <div class="admin-playback-box" id="playbackVisualBox">
-            <h4 id="playbackTitle" style="text-align:center; color:var(--accent-color); font-family:sans-serif; margin-bottom: 5px;">點擊下方學生欄位播放演示圖</h4>
+            <div class="playback-header">
+                 <div class="playback-title-text" id="playbackMainTitle">打字脈絡演示</div>
+                 <div class="playback-title-text" id="playbackSeatTitle" style="color: var(--text-color);"></div>
+            </div>
             
             <div class="playback-controls-row">
-                <span class="label">切換重播關卡：</span>
+                <span class="label">切換關卡：</span>
                 <div id="playbackButtonArea" style="display: flex; gap: 8px;"></div>
             </div>
 
@@ -302,8 +414,8 @@
                 <span id="playbackTextScreen"></span><span id="virtualCursor" class="playback-cursor">&nbsp;</span>
             </div>
             <div class="playback-dash">
-                <span>目前模擬時間: <b id="playbackTimer">0</b> 秒</span>
-                <span>當前即時速度: <b id="playbackWpm" style="color:#ffd43b;">0</b> WPM</span>
+                <span>模擬時間: <b id="playbackTimer">0</b> 秒</span>
+                <span>即時速度: <b id="playbackWpm" style="color: var(--accent-color);">0</b> WPM</span>
             </div>
         </div>
 
@@ -312,8 +424,8 @@
                 <tr>
                     <th>最新測試時間</th>
                     <th>座號</th>
-                    <th>總平均速度 (WPM)</th>
-                    <th>已完成關卡數</th>
+                    <th>平均 WPM</th>
+                    <th>完成進度</th>
                 </tr>
             </thead>
             <tbody id="adminTableBody">
@@ -324,8 +436,11 @@
 </div>
 
 <script>
-    // ⚠️ 請換上您的後端網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec";
+    // ⚠️ =========================================
+    // 請填入您的後端網址 (與 Apps Script 部署 URL 相同)
+    // =========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
+
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
@@ -338,11 +453,36 @@
     let liveChart = null; 
     let playbackIntervalId = null; 
     let globalAdminData = []; let glassCallback = null;
-    
-    // 快取學生紀錄數據
     let currentSelectedSeatRecords = [];
 
-    // 初始化 1-29 座號
+    // ✨ 主題切換邏輯
+    function toggleTheme() {
+        const body = document.body;
+        const themeBtn = document.getElementById('themeBtn');
+        const isDark = body.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            body.setAttribute('data-theme', 'light');
+            themeBtn.textContent = '🌙';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            themeBtn.textContent = '☀️';
+        }
+        if (liveChart) updateChartColors();
+    }
+
+    function updateChartColors() {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        liveChart.options.scales.x.grid.color = gridColor;
+        liveChart.options.scales.y.grid.color = gridColor;
+        liveChart.options.scales.x.ticks.color = textColor;
+        liveChart.options.scales.y.ticks.color = textColor;
+        liveChart.update('none');
+    }
+
+    // 初始化座號選單
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -390,17 +530,17 @@
         .then(res => res.json()) 
         .then(data => {
             if (data.status === "success") {
-                openGlassAlert("驗證成功", "身分核對正確，正在進入後台讀取資料...", function() {
+                openGlassAlert("✅ 驗證成功", "歡迎回來，管理員。正在載入班級數據...", function() {
                     document.getElementById('toggleModeBtn').textContent = "返回測試";
                     showPage('adminPage');
                     fetchAdminData();
                 });
             } else {
-                openGlassAlert("驗證失敗", "您輸入的管理密碼不正確，請重新確認。");
+                openGlassAlert("❌ 驗證失敗", "密碼錯誤，請重新確認。");
             }
         }).catch((err) => {
             console.error(err);
-            openGlassAlert("系統連線失敗", "後端 Google 應用程式可能未正確發布新版本。請確認已選擇『新版本』且存取權限為『所有人』。");
+            openGlassAlert("⚠️ 系統連線失敗", "無法連接至後端。請確認網路連線或 API 網址。");
         });
     }
 
@@ -414,7 +554,7 @@
         const startBtn = document.getElementById('startBtn');
         
         startBtn.disabled = true;
-        startBtn.textContent = "正在線上核對座號身分...";
+        startBtn.textContent = "正在線上核對座號...";
 
         fetch(`${API_URL}?checkSeat=${selectedSeat}`, {
             method: "GET",
@@ -426,7 +566,7 @@
             startBtn.textContent = "開始 3 關挑戰測試";
             
             if (data.duplicate) {
-                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已經完成過本次 Python 測試囉！每人限定挑戰一次。如需重新測試，請聯繫老師清除紀錄。`);
+                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已完成過本次測試。每人限挑戰一次。`);
             } else {
                 currentSeatNumber = selectedSeat;
                 currentLevel = 0; 
@@ -440,19 +580,19 @@
             console.error(err);
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關挑戰測試";
-            openGlassAlert("系統安全異常", "無法連接至雲端資料庫檢查重複性，請檢查網路，或確認後端已正確部署。");
+            openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號核對。");
         });
     }
 
     function setupSecurityRestrictions() {
         const inputField = document.getElementById('typingInput');
-        inputField.addEventListener('paste', function(e) { e.preventDefault(); openGlassAlert("操作受限", "為確保練習成效，系統禁止在此處直接貼上程式碼！"); });
-        inputField.addEventListener('copy', function(e) { e.preventDefault(); });
-        inputField.addEventListener('drop', function(e) { e.preventDefault(); });
+        inputField.addEventListener('paste', e => { e.preventDefault(); openGlassAlert("操作受限", "禁止使用貼上功能，請手動輸入代碼以達成練習效果。"); });
+        inputField.addEventListener('copy', e => e.preventDefault());
+        inputField.addEventListener('drop', e => e.preventDefault());
     }
 
     function loadLevel() {
-        document.getElementById('progressDisplay').textContent = `目前關卡: ${currentLevel + 1} / ${sentences.length}`;
+        document.getElementById('progressDisplay').textContent = `關卡: ${currentLevel + 1} / ${sentences.length}`;
         targetSentence = sentences[currentLevel];
         renderText("");
         
@@ -476,8 +616,7 @@
                 if (inputVal[i] === targetSentence[i]) {
                     span.classList.add('correct');
                 } else {
-                    span.style.color = '#f87171';
-                    span.style.backgroundColor = 'rgba(248,113,113,0.15)';
+                    span.classList.add('error');
                 }
             } else if (i === inputVal.length) {
                 span.classList.add('current');
@@ -498,12 +637,27 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
-        if (inputVal === targetSentence) {
+        // 檢查是否所有輸入都正確
+        let isCorrect = true;
+        if(inputVal.length !== targetSentence.length) {
+            isCorrect = false;
+        } else {
+            for(let i=0; i<targetSentence.length; i++) {
+                if(inputVal[i] !== targetSentence[i]) {
+                    isCorrect = false; break;
+                }
+            }
+        }
+
+        if (isCorrect) {
             clearInterval(timerInterval);
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
-            let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
+            // 避免除以零
+            if(finalTime < 0.01) finalTime = 0.01;
+            let finalWpm = Math.round((targetSentence.length / 5) / finalTime);
             
+            // 提交這關的分數
             submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
 
             if (currentLevel < sentences.length - 1) {
@@ -511,8 +665,8 @@
                 setTimeout(loadLevel, 600); 
             } else {
                 openGlassAlert(
-                    "🎉 全數挑戰成功！", 
-                    `恭喜完成 3 關 Python 脈絡打字測試！所有即時數據已成功封包並上傳後台試算表。`, 
+                    "🎉 挑戰達成！", 
+                    `恭喜完成所有關卡。數據已上傳。`, 
                     function() {
                         resetTestSystem();
                         showPage('loginPage');
@@ -543,17 +697,50 @@
         speedHistory.push(wpm);
         liveChart.data.labels.push(secondsElapsed);
         liveChart.data.datasets[0].data.push(wpm);
-        liveChart.update();
+        liveChart.update('none'); // 使用 'none' 模式避免不必要的動畫
     }
 
     function initLiveChart() {
         if(liveChart) liveChart.destroy();
         const ctx = document.getElementById('liveChart').getContext('2d');
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        
         liveChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [0], datasets: [{ data: [0], borderColor: '#ffd43b', borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+            data: { 
+                labels: [0], 
+                datasets: [{ 
+                    data: [0], 
+                    borderColor: '#fbbf24', 
+                    borderWidth: 3, 
+                    tension: 0.3, 
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: 'rgba(251, 191, 36, 0.05)'
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                animation: false,
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { display: false, grid: { display: false } }, 
+                    y: { 
+                        display: true, 
+                        position: 'right',
+                        ticks: {
+                            maxTicksLimit: 3,
+                            font: { size: 10 }
+                        },
+                        grid: { 
+                            drawBorder: false,
+                        } 
+                    } 
+                } 
+            }
         });
+        updateChartColors();
     }
 
     function submitScore(seat, wpm, history, typedText) {
@@ -563,7 +750,7 @@
             body: JSON.stringify({ number: seat, wpm: wpm, history: history, typedText: typedText })
         })
         .then(res => res.json())
-        .catch((err) => console.log("背景同步中...", err));
+        .catch((err) => console.log("數據同步中...", err));
     }
 
     function resetTestSystem() {
@@ -572,11 +759,11 @@
         clearTimeout(playbackIntervalId);
     }
 
-    // ================= 後台數據群組化與動態按鈕渲染 =================
+    // ================= 後台重播系統 =================
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = `<tr><td colspan="4">正在即時讀取最新資料庫...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4">正在同步最新挑戰紀錄...</td></tr>`;
 
         fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
@@ -584,7 +771,7 @@
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4">目前資料庫尚無任何學生成績紀錄。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4">目前資料庫無紀錄。</td></tr>`;
                 return;
             }
 
@@ -611,60 +798,52 @@
                 tr.innerHTML = `
                     <td>${student.lastTimestamp}</td>
                     <td><b>${student.seatNumber} 號</b></td>
-                    <td style="color:#ffd43b; font-weight:bold;">${avgWpm} WPM</td>
-                    <td><span style="background:rgba(74,222,128,0.1); color:#4ade80; padding:3px 10px; border-radius:12px; font-size:13px;">${student.records.length} / 3 關</span></td>
+                    <td style="color: var(--accent-color); font-weight:700;">${avgWpm}</td>
+                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 3</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }).catch((err) => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="4" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否已發布新版本。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="color: var(--error-color);">無法連線至 API。</td></tr>`;
         });
     }
 
-    // ✨ 核心升級：初始化特定學生的重播按鈕組
     function initStudentPlaybackGroup(seatNumber, records) {
         clearTimeout(playbackIntervalId);
         currentSelectedSeatRecords = records; 
 
         document.getElementById('playbackVisualBox').style.display = "block";
-        document.getElementById('playbackTitle').textContent = `🎬 正在準備： ${seatNumber} 號同學的整合脈絡現場`;
+        document.getElementById('playbackSeatTitle').textContent = `座號: ${seatNumber}`;
 
-        // 清空並重新動態建構「按鈕切換列」
         const btnArea = document.getElementById('playbackButtonArea');
         btnArea.innerHTML = "";
 
         records.forEach((rec, idx) => {
             let btn = document.createElement('button');
             btn.className = "level-toggle-btn";
-            btn.textContent = `第 ${idx + 1} 關`;
+            btn.textContent = `關卡 ${idx + 1}`;
             
-            // 點擊事件：將該按鈕設為 active 並啟動對應關卡重播
             btn.onclick = function() {
-                // 清除其他按鈕的 active 樣式
                 document.querySelectorAll('.level-toggle-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
                 clearTimeout(playbackIntervalId);
                 executeCorePlayback(rec);
             };
-            
             btnArea.appendChild(btn);
         });
 
-        // 預設自動模擬「第一顆按鈕」的重播內容
+        // 自動播放第一關
         if (btnArea.firstChild) {
             btnArea.firstChild.click();
         }
     }
 
-    // 🚀 高階重播引擎：動態時間間隔均勻分流
     function executeCorePlayback(record) {
         const historyData = record.history || [0];
-        let mockFullText = record.typedText || sentences[0]; 
+        let mockFullText = record.typedText || ""; 
 
-        document.getElementById('playbackTitle').textContent = `🎬 正在重播： ${record.number} 號同學的打字脈絡現場`;
-        
         const textScreen = document.getElementById('playbackTextScreen');
         const cursor = document.getElementById('virtualCursor');
         textScreen.textContent = "";
@@ -675,7 +854,6 @@
 
         function runNextSecond() {
             if (currentSecond >= historyData.length || currentCharIndex >= mockFullText.length) {
-                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${record.number} 號同學 模擬完畢`;
                 cursor.classList.add('stopped'); 
                 return;
             }
@@ -685,6 +863,7 @@
             document.getElementById('playbackWpm').textContent = currentWpm;
 
             let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
+            // 速度為0時，依然至少要打一個字，避免卡住
             if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
 
             if (charsToTypeThisSecond > 0) {
@@ -708,7 +887,6 @@
                 playbackIntervalId = setTimeout(runNextSecond, 1000);
             }
         }
-
         runNextSecond();
     }
 </script>
