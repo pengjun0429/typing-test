@@ -3,61 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業打字速度測試系統</title>
+    <title>程式碼打字速度模擬測試系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
             --card-bg: #1e293b;
-            --accent-color: #a855f7; /* 浪漫紫風格 */
+            --accent-color: #38bdf8; /* 改為科技藍，更符合寫程式的氛圍 */
             --text-color: #f8fafc;
             --text-muted: #64748b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; } /* 使用等寬字型模擬寫程式 */
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .container { background: var(--card-bg); padding: 40px; border-radius: 12px; width: 100%; max-width: 850px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; }
-        .nav-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-        .nav-btn:hover { background: var(--accent-color); }
+        .nav-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: sans-serif; }
+        .nav-btn:hover { background: var(--accent-color); color: #000; }
         
-        h2 { text-align: center; margin-bottom: 25px; font-weight: 400; }
+        h2 { text-align: center; margin-bottom: 25px; font-weight: 400; font-family: sans-serif; }
         .page { display: none; }
         .page.active { display: block; }
 
         /* 儀表板數據 */
-        .dashboard { display: flex; justify-content: center; gap: 60px; margin-bottom: 20px; text-align: center; }
+        .dashboard { display: flex; justify-content: center; gap: 60px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
         .dash-item { font-size: 14px; color: var(--text-muted); }
         .dash-value { font-size: 48px; color: var(--text-color); font-weight: bold; margin-top: 5px; }
 
         /* 表單與按鈕 */
-        .form-group { text-align: center; margin: 20px 0; }
+        .form-group { text-align: center; margin: 20px 0; font-family: sans-serif; }
         select, input { background: #334155; border: 1px solid #475569; color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; width: 100%; max-width: 250px; text-align: center; outline: none; }
-        button.btn { background: var(--accent-color); color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 6px; cursor: pointer; display: block; margin: 20px auto 0; }
+        button.btn { background: var(--accent-color); color: #000; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; display: block; margin: 20px auto 0; font-family: sans-serif; }
         
         /* 打字區域（防止複製反白） */
         .word-display { 
-            font-size: 24px; 
+            font-size: 22px; 
             color: var(--text-muted); 
             line-height: 1.6; 
             margin-bottom: 25px; 
             letter-spacing: 1px; 
             word-wrap: break-word; 
             min-height: 80px; 
+            white-space: pre-wrap; /* 保留程式碼空格 */
+            background: #090d16;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
             user-select: none; 
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        .word-display span.correct { color: var(--text-color); }
-        .word-display span.current { border-bottom: 2px solid var(--accent-color); color: var(--text-color); }
+        .word-display span.correct { color: #4ade80; } /* 正確顯示綠色 */
+        .word-display span.current { background-color: rgba(56, 189, 248, 0.3); color: var(--text-color); }
         .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none;}
         .input-field:focus { border-color: var(--accent-color); }
         
         /* 圖表外框 */
         .chart-container { width: 100%; height: 120px; margin-top: 30px; }
-        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; }
+        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; font-family: sans-serif; }
 
         /* 後台表格 */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; }
         th { color: var(--text-muted); font-weight: normal; }
         tbody tr { cursor: pointer; }
@@ -70,7 +75,7 @@
     <button class="nav-btn" id="toggleModeBtn" onclick="handleNavClick()">切換至後台</button>
 
     <div id="loginPage" class="page active">
-        <h2>輸入座號開始測試</h2>
+        <h2>選擇座號模擬寫程式</h2>
         <div class="form-group">
             <select id="seatNumber"></select>
             <button class="btn" onclick="startTest()">進入測試</button>
@@ -84,7 +89,7 @@
             <div class="dash-item">時間<div class="dash-value" id="timer">0</div></div>
         </div>
         <div class="word-display" id="sentenceDisplay"></div>
-        <input type="text" id="typingInput" class="input-field" placeholder="在此開始打字..." autocomplete="off" disabled>
+        <input type="text" id="typingInput" class="input-field" placeholder="在此依序輸入上方小寫程式碼..." autocomplete="off" disabled>
         
         <div class="chart-container">
             <canvas id="liveChart"></canvas>
@@ -118,14 +123,17 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbx0M3mpVjNEKbk6GRHMd5vawLg4ws9ElKnFW-8f7vKaJbzcEQnhMZbgTpseo20sZsYj/exec"; 
+    // ⚠️ 請在此處將網址替換成您的 Google Apps Script 網頁應用程式 URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbxRuxRRKxFN25dDvPpAODZYAIuXFePixLIJ4x0QIjzTmhxlml_n_YaZaBNI8uBoJx1p/exec"; 
 
+    // 模擬程式碼庫：完全小寫
     const sentences = [
-        "It is better to fail in originality than to succeed in imitation.",
-        "The quick brown fox jumps over the lazy dog.",
-        "Success is not final failure is not fatal it is the courage to continue.",
-        "Beautiful things happen when you distance yourself from negativity.",
-        "Learning to code opens up a whole new world of creative possibilities."
+        "let total = 0; for (let i = 0; i < 10; i++) { total += i; }",
+        "function greeting() { console.log('hello world'); }",
+        "const items = [1, 2, 3]; items.forEach(x => console.log(x));",
+        "if (score >= 60) { status = 'pass'; } else { status = 'fail'; }",
+        "document.queryselector('#btn').addeventlistener('click', start);",
+        "const result = data.filter(item => item.value > 100);"
     ];
 
     let currentSeatNumber = "";
@@ -142,9 +150,9 @@
     let playbackInterval = null;
     let globalAdminData = [];
 
-    // 初始化座號 (1-50)
+    // 初始化座號選單：精確設定為 1 到 29 號
     const seatSelect = document.getElementById('seatNumber');
-    for(let i = 1; i <= 50; i++) {
+    for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
         opt.value = i; opt.textContent = i + " 號";
         seatSelect.appendChild(opt);
@@ -155,7 +163,7 @@
         document.getElementById(pageId).classList.add('active');
     }
 
-    // 後台驗證
+    // 後台管理員登入密碼驗證
     function handleNavClick() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
@@ -177,7 +185,7 @@
                     alert("密碼錯誤！");
                 }
             }).catch(() => {
-                alert("通訊失敗，請確認第一步的 Apps Script 網址是否正確填入。");
+                alert("通訊失敗，請確認 Apps Script 網址是否正確更新並填入。");
             });
         } else {
             btn.textContent = "切換至後台";
@@ -194,10 +202,10 @@
         
         const inputField = document.getElementById('typingInput');
         
-        // 🚫 嚴格防止複製、貼上與滑鼠拖曳行為
+        // 🚫 嚴格防止複製、貼上與滑鼠拖曳文字行為
         inputField.addEventListener('paste', function(e) {
             e.preventDefault();
-            alert("系統偵測到貼上行為！請誠實自行打字。");
+            alert("系統提示：禁止貼上！請手動輸入程式碼。");
         });
         inputField.addEventListener('copy', function(e) { e.preventDefault(); });
         inputField.addEventListener('drop', function(e) { e.preventDefault(); });
@@ -292,7 +300,7 @@
         const ctx = document.getElementById('liveChart').getContext('2d');
         liveChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [0], datasets: [{ data: [0], borderColor: '#a855f7', borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
+            data: { labels: [0], datasets: [{ data: [0], borderColor: '#38bdf8', borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
         });
     }
@@ -329,7 +337,7 @@
             return res.json();
         })
         .then(data => {
-            globalAdminData = data; // 存下原始陣列
+            globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3">目前尚無學生成績。</td></tr>`;
@@ -342,19 +350,18 @@
             displayData.forEach((row, index) => {
                 let tr = document.createElement('tr');
                 
-                // 計算對應回原始 globalAdminData 的索引，確保動態圖播放正確
                 let originalIndex = data.length - 1 - index;
                 tr.onclick = () => playStudentDemo(originalIndex); 
                 
                 tr.innerHTML = `
                     <td>${row.timestamp}</td>
                     <td>${row.number} 號</td>
-                    <td style="color:#a855f7; font-weight:bold;">${row.wpm} WPM</td>
+                    <td style="color:#38bdf8; font-weight:bold;">${row.wpm} WPM</td>
                 `;
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已發布「新版本」，且權限設為「所有人」。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已點擊部署發布「新版本」，且權限設為「所有人」。</td></tr>`;
         });
     }
 
@@ -371,12 +378,11 @@
         const ctx = document.getElementById('adminPlaybackChart').getContext('2d');
         playbackChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)', fill: true, tension: 0.2 }] },
+            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.2 }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 120 } } }
         });
 
         let currentTick = 1;
-        // 模擬當時每秒的速度增長，重現打字動態
         playbackInterval = setInterval(() => {
             if (currentTick < historyData.length) {
                 playbackChart.data.labels.push(currentTick + "秒");
@@ -386,7 +392,7 @@
             } else {
                 clearInterval(playbackInterval);
             }
-        }, 300); // 每 300 毫秒渲染一格，提供流暢的縮時演示感
+        }, 300); 
     }
 </script>
 </body>
