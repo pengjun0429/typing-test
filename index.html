@@ -122,6 +122,42 @@
             letter-spacing: 1px;
             white-space: pre-wrap;
         }
+
+        /* 🎛️ 整合後的「按鈕切換」控制列樣式 */
+        .playback-controls-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            font-family: sans-serif;
+        }
+        .playback-controls-row .label { color: var(--text-muted); font-size: 14px; }
+        
+        /* 關卡切換微調小按鈕 */
+        .level-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.25s ease;
+        }
+        .level-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .level-toggle-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+            font-weight: bold;
+        }
+
         /* 動態虛擬光標 */
         .playback-cursor {
             display: inline-block;
@@ -148,7 +184,7 @@
         tbody tr { cursor: pointer; transition: background 0.2s; }
         tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* ✨ 全螢幕磨砂玻璃覆蓋層 */
+        /* 全螢幕磨砂玻璃覆蓋層 */
         .glass-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -255,7 +291,13 @@
         </div>
         
         <div class="admin-playback-box" id="playbackVisualBox">
-            <h4 id="playbackTitle" style="text-align:center; color:var(--accent-color); font-family:sans-serif;">點擊下方學生欄位播放演示圖</h4>
+            <h4 id="playbackTitle" style="text-align:center; color:var(--accent-color); font-family:sans-serif; margin-bottom: 5px;">點擊下方學生欄位播放演示圖</h4>
+            
+            <div class="playback-controls-row">
+                <span class="label">切換重播關卡：</span>
+                <div id="playbackButtonArea" style="display: flex; gap: 8px;"></div>
+            </div>
+
             <div class="playback-monitor">
                 <span id="playbackTextScreen"></span><span id="virtualCursor" class="playback-cursor">&nbsp;</span>
             </div>
@@ -268,22 +310,22 @@
         <table>
             <thead>
                 <tr>
-                    <th>測試時間</th>
+                    <th>最新測試時間</th>
                     <th>座號</th>
-                    <th>該關速度 (WPM)</th>
+                    <th>總平均速度 (WPM)</th>
+                    <th>已完成關卡數</th>
                 </tr>
             </thead>
             <tbody id="adminTableBody">
-                <tr><td colspan="3">請點選重新整理數據</td></tr>
+                <tr><td colspan="4">請點選重新整理數據</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // ⚠️ 填入您的 Google Apps Script 網路應用程式 URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
-
+    // ⚠️ 請換上您的後端網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec";
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
@@ -296,8 +338,11 @@
     let liveChart = null; 
     let playbackIntervalId = null; 
     let globalAdminData = []; let glassCallback = null;
+    
+    // 快取學生紀錄數據
+    let currentSelectedSeatRecords = [];
 
-    // 初始化 1-29 座號選單
+    // 初始化 1-29 座號
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -364,7 +409,6 @@
         document.getElementById(pageId).classList.add('active');
     }
 
-    // 🔒 線上重複座號檢查，防止重複挑戰
     function startTest() {
         const selectedSeat = seatSelect.value;
         const startBtn = document.getElementById('startBtn');
@@ -460,7 +504,6 @@
             let finalTime = (new Date() - startTime) / 1000 / 60;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
             
-            // 傳送包括當前關卡文字的完整內容給資料庫
             submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
 
             if (currentLevel < sentences.length - 1) {
@@ -529,11 +572,11 @@
         clearTimeout(playbackIntervalId);
     }
 
-    // ================= 後台數據連線與重播處理 =================
+    // ================= 後台數據群組化與動態按鈕渲染 =================
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4">正在即時讀取最新資料庫...</td></tr>`;
 
         fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
@@ -541,37 +584,86 @@
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3">目前資料庫尚無任何學生成績紀錄。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4">目前資料庫尚無任何學生成績紀錄。</td></tr>`;
                 return;
             }
-            let displayData = [...data].reverse();
-            displayData.forEach((row, index) => {
+
+            // 依座號分組
+            let studentMap = {};
+            data.forEach(row => {
+                let seat = row.number;
+                if (!studentMap[seat]) {
+                    studentMap[seat] = { seatNumber: seat, lastTimestamp: row.timestamp, records: [] };
+                }
+                studentMap[seat].records.push(row);
+                studentMap[seat].lastTimestamp = row.timestamp;
+            });
+
+            let sortedStudents = Object.values(studentMap).sort((a, b) => parseInt(a.seatNumber) - parseInt(b.seatNumber));
+
+            sortedStudents.forEach((student) => {
+                let sumWpm = 0;
+                student.records.forEach(r => sumWpm += r.wpm);
+                let avgWpm = Math.round(sumWpm / student.records.length);
+
                 let tr = document.createElement('tr');
-                let originalIndex = data.length - 1 - index;
-                tr.onclick = () => playStudentDemo(originalIndex); 
+                tr.onclick = () => initStudentPlaybackGroup(student.seatNumber, student.records); 
                 tr.innerHTML = `
-                    <td>${row.timestamp}</td>
-                    <td>${row.number} 號</td>
-                    <td style="color:#ffd43b; font-weight:bold;">${row.wpm} WPM</td>
+                    <td>${student.lastTimestamp}</td>
+                    <td><b>${student.seatNumber} 號</b></td>
+                    <td style="color:#ffd43b; font-weight:bold;">${avgWpm} WPM</td>
+                    <td><span style="background:rgba(74,222,128,0.1); color:#4ade80; padding:3px 10px; border-radius:12px; font-size:13px;">${student.records.length} / 3 關</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }).catch((err) => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否已發布新版本。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否已發布新版本。</td></tr>`;
         });
     }
 
-    // 🚀 核心優化：動態時間間隔均勻分流重播引擎
-    function playStudentDemo(index) {
-        clearTimeout(playbackIntervalId); // 清除上一個尚未執行的計時排程
-        
-        const student = globalAdminData[index];
-        const historyData = student.history || [0];
-        let mockFullText = student.typedText || sentences[0]; 
+    // ✨ 核心升級：初始化特定學生的重播按鈕組
+    function initStudentPlaybackGroup(seatNumber, records) {
+        clearTimeout(playbackIntervalId);
+        currentSelectedSeatRecords = records; 
 
         document.getElementById('playbackVisualBox').style.display = "block";
-        document.getElementById('playbackTitle').textContent = `🎬 正在重播： ${student.number} 號同學的打字脈絡現場`;
+        document.getElementById('playbackTitle').textContent = `🎬 正在準備： ${seatNumber} 號同學的整合脈絡現場`;
+
+        // 清空並重新動態建構「按鈕切換列」
+        const btnArea = document.getElementById('playbackButtonArea');
+        btnArea.innerHTML = "";
+
+        records.forEach((rec, idx) => {
+            let btn = document.createElement('button');
+            btn.className = "level-toggle-btn";
+            btn.textContent = `第 ${idx + 1} 關`;
+            
+            // 點擊事件：將該按鈕設為 active 並啟動對應關卡重播
+            btn.onclick = function() {
+                // 清除其他按鈕的 active 樣式
+                document.querySelectorAll('.level-toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                clearTimeout(playbackIntervalId);
+                executeCorePlayback(rec);
+            };
+            
+            btnArea.appendChild(btn);
+        });
+
+        // 預設自動模擬「第一顆按鈕」的重播內容
+        if (btnArea.firstChild) {
+            btnArea.firstChild.click();
+        }
+    }
+
+    // 🚀 高階重播引擎：動態時間間隔均勻分流
+    function executeCorePlayback(record) {
+        const historyData = record.history || [0];
+        let mockFullText = record.typedText || sentences[0]; 
+
+        document.getElementById('playbackTitle').textContent = `🎬 正在重播： ${record.number} 號同學的打字脈絡現場`;
         
         const textScreen = document.getElementById('playbackTextScreen');
         const cursor = document.getElementById('virtualCursor');
@@ -581,10 +673,9 @@
         let currentCharIndex = 0;
         let currentSecond = 0;
 
-        // 核心調度引擎：每一秒執行一次，去動態平分這一秒內的打字間隔
         function runNextSecond() {
             if (currentSecond >= historyData.length || currentCharIndex >= mockFullText.length) {
-                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${student.number} 號同學 模擬完畢`;
+                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${record.number} 號同學 模擬完畢`;
                 cursor.classList.add('stopped'); 
                 return;
             }
@@ -593,12 +684,10 @@
             document.getElementById('playbackTimer').textContent = currentSecond;
             document.getElementById('playbackWpm').textContent = currentWpm;
 
-            // 換算這一秒內必須「均勻噴出」的總字數
             let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
             if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
 
             if (charsToTypeThisSecond > 0) {
-                // ✨ 均勻切割：將 1000 毫秒切成 N 等分
                 let msPerChar = Math.floor(1000 / charsToTypeThisSecond);
                 let charCountSent = 0;
 
@@ -607,23 +696,20 @@
                         textScreen.textContent += mockFullText[currentCharIndex];
                         currentCharIndex++;
                         charCountSent++;
-                        // 利用動態微調的等待時間，精準銜接下一個字
                         playbackIntervalId = setTimeout(triggerSingleChar, msPerChar);
                     } else {
-                        // 這一秒的字字落入完畢，順暢切換到下一秒
                         currentSecond++;
                         runNextSecond();
                     }
                 }
-                triggerSingleChar(); // 啟動一秒內的打字小流
+                triggerSingleChar();
             } else {
-                // 如果 WPM 為 0 (學生在思考或停頓)，就乾等一秒再看下一秒
                 currentSecond++;
                 playbackIntervalId = setTimeout(runNextSecond, 1000);
             }
         }
 
-        runNextSecond(); // 啟動重播
+        runNextSecond();
     }
 </script>
 </body>
