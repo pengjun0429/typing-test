@@ -6,8 +6,8 @@
     "enabled": true
   },
   "assets": {
-  "directory": "./public"
-}
+    "directory": "./public"
+  }, // <-- 補上這個關鍵的逗號
   "compatibility_flags": [
     "nodejs_compat"
   ]
