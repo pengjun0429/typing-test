@@ -3,79 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python 程式碼 3 關打字測試系統</title>
+    <title>Python 3關程式碼挑戰系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #0b1329;
+            --card-bg: rgba(30, 41, 59, 0.7);
             --accent-color: #ffd43b; /* Python 經典黃 */
+            --accent-glow: rgba(255, 212, 59, 0.4);
             --text-color: #f8fafc;
-            --text-muted: #64748b;
+            --text-muted: #94a3b8;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden;}
-        .container { background: var(--card-bg); padding: 40px; border-radius: 12px; width: 100%; max-width: 850px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; }
-        .nav-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: sans-serif; }
-        .nav-btn:hover { background: var(--accent-color); color: #000; }
         
-        h2 { text-align: center; margin-bottom: 25px; font-weight: 400; font-family: sans-serif; }
+        body { 
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            color: var(--text-color); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+            overflow-x: hidden;
+        }
+
+        /* 主容器 - 磨砂玻璃效果 */
+        .container { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 850px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; 
+        }
+
+        .nav-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: var(--text-color); 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-family: sans-serif; 
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-glow); border-color: var(--accent-color); }
+        
+        h2 { text-align: center; margin-bottom: 25px; font-weight: 600; font-family: sans-serif; letter-spacing: 1px; color: #fff;}
         .page { display: none; }
         .page.active { display: block; }
 
         /* 儀表板與進度條 */
         .dashboard { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
         .dash-item { font-size: 14px; color: var(--text-muted); }
-        .dash-value { font-size: 36px; color: var(--text-color); font-weight: bold; margin-top: 5px; }
+        .dash-value { font-size: 36px; color: var(--text-color); font-weight: bold; margin-top: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
         
-        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 15px; font-family: sans-serif; }
+        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 15px; font-family: sans-serif; text-shadow: 0 0 8px var(--accent-glow); }
 
         /* 表單與按鈕 */
         .form-group { text-align: center; margin: 20px 0; font-family: sans-serif; }
-        select, input { background: #334155; border: 1px solid #475569; color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; width: 100%; max-width: 250px; text-align: center; outline: none; }
-        button.btn { background: var(--accent-color); color: #000; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; display: block; margin: 20px auto 0; font-family: sans-serif; }
+        select, input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 14px; font-size: 16px; border-radius: 8px; width: 100%; max-width: 280px; text-align: center; outline: none; transition: all 0.3s; }
+        select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 10px var(--accent-glow); }
+        
+        button.btn { background: linear-gradient(135deg, #ffd43b, #ffa500); color: #000; border: none; padding: 14px 35px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: block; margin: 25px auto 0; font-family: sans-serif; box-shadow: 0 5px 15px rgba(255, 212, 59, 0.3); transition: all 0.3s; }
+        button.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 212, 59, 0.5); }
         
         /* 打字區域 */
         .word-display { 
             font-size: 20px; 
-            color: var(--text-muted); 
+            color: #475569; 
             line-height: 1.6; 
             margin-bottom: 25px; 
             letter-spacing: 1px; 
             word-wrap: break-word; 
             min-height: 80px; 
             white-space: pre-wrap;
-            background: #090d16;
+            background: rgba(15, 23, 42, 0.8);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             border-left: 4px solid var(--accent-color);
-            user-select: none; 
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            user-select: none; -webkit-user-select: none; -moz-user-select: none;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
         }
-        .word-display span.correct { color: #4ade80; } 
-        .word-display span.current { background-color: rgba(255, 212, 59, 0.3); color: var(--text-color); }
-        .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none;}
+        .word-display span.correct { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); } 
+        .word-display span.current { background-color: rgba(255, 212, 59, 0.3); color: var(--text-color); border-radius: 2px; }
+        
+        .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none; transition: border-color 0.3s; }
         .input-field:focus { border-color: var(--accent-color); }
         
-        /* 圖表與後台 */
+        /* 圖表與後台列表 */
         .chart-container { width: 100%; height: 120px; margin-top: 30px; }
-        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; font-family: sans-serif; }
+        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; }
+        th, td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { color: var(--text-muted); font-weight: normal; }
-        tbody tr { cursor: pointer; }
-        tbody tr:hover { background: rgba(255,255,255,0.05); }
+        tbody tr { cursor: pointer; transition: background 0.2s; }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* ✨ 核心：玻璃流光面板樣式 (Glassmorphism) */
+        /* ✨ 核心：全螢幕磨砂玻璃覆蓋層 (CORS / 密碼 / 通關通用) */
         .glass-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); /* 暗色半透明底 */
-            backdrop-filter: blur(10px); /* 磨砂玻璃特效 */
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(10, 15, 30, 0.7); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -84,57 +124,40 @@
             pointer-events: none;
             transition: opacity 0.4s ease;
         }
-        .glass-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .glass-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        /* 玻璃面板字卡 */
         .glass-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 212, 59, 0.3); /* 黃色半透明邊框 */
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 212, 59, 0.1);
-            padding: 35px 50px;
-            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            padding: 35px 40px;
+            border-radius: 20px;
             width: 90%;
-            max-width: 480px;
+            max-width: 450px;
             text-align: center;
-            transform: scale(0.85);
+            transform: scale(0.9);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .glass-overlay.active .glass-card {
-            transform: scale(1);
-        }
-        .glass-title {
-            font-size: 24px;
-            color: var(--accent-color);
-            margin-bottom: 15px;
-            font-family: sans-serif;
-            text-shadow: 0 0 10px rgba(255, 212, 59, 0.5);
-        }
-        .glass-msg {
-            font-size: 16px;
-            color: #e2e8f0;
-            line-height: 1.6;
-            margin-bottom: 25px;
-            font-family: sans-serif;
-        }
+        .glass-overlay.active .glass-card { transform: scale(1); }
+        
+        /* 密碼卡片專屬發光霓虹邊框 */
+        .password-style { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15); }
+        .password-style .glass-title { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+        
+        .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; text-shadow: 0 0 10px rgba(255, 212, 59, 0.4); }
+        .glass-msg { font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
+        
         .glass-btn {
             background: linear-gradient(135deg, #ffd43b, #ffb800);
-            color: #000;
-            border: none;
-            padding: 10px 30px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 212, 59, 0.4);
-            transition: background 0.2s, transform 0.1s;
-            font-family: sans-serif;
-            display: inline-block;
+            color: #000; border: none; padding: 12px 30px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 212, 59, 0.3); transition: all 0.2s; font-family: sans-serif; display: inline-block; margin: 5px;
         }
-        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 212, 59, 0.6); }
-        .glass-btn:active { transform: translateY(0); }
+        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 212, 59, 0.5); }
+        .glass-btn.btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: none; }
+        .glass-btn.btn-secondary:hover { background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
@@ -142,16 +165,30 @@
 <div class="glass-overlay" id="glassAlert">
     <div class="glass-card">
         <div class="glass-title" id="glassTitle">系統提示</div>
-        <div class="glass-msg" id="glassMsg">這是內容訊息。</div>
-        <button class="glass-btn" id="glassBtn" onclick="closeGlassAlert()">確認</button>
+        <div class="glass-msg" id="glassMsg">內容載入中...</div>
+        <button class="glass-btn" onclick="closeGlassAlert()">確認</button>
+    </div>
+</div>
+
+<div class="glass-overlay" id="glassPasswordOverlay">
+    <div class="glass-card password-style">
+        <div class="glass-title">安全身分驗證</div>
+        <div class="glass-msg">請在下方輸入後台管理密碼以進入系統：</div>
+        <div class="form-group">
+            <input type="password" id="adminPasswordInput" placeholder="請輸入管理密碼..." style="max-width: 100%; margin-bottom: 20px;">
+        </div>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="glass-btn btn-secondary" onclick="closePasswordPanel()">取消</button>
+            <button class="glass-btn" onclick="submitAdminPassword()" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">登入</button>
+        </div>
     </div>
 </div>
 
 <div class="container">
-    <button class="nav-btn" id="toggleModeBtn" onclick="handleNavClick()">切換至後台</button>
+    <button class="nav-btn" id="toggleModeBtn" onclick="openPasswordPanel()">切換至後台</button>
 
     <div id="loginPage" class="page active">
-        <h2> Python 測試</h2>
+        <h2>選擇座號 (1-29 號) 連續 Python 測試</h2>
         <div class="form-group">
             <select id="seatNumber"></select>
             <button class="btn" onclick="startTest()">開始 3 關挑戰測試</button>
@@ -200,33 +237,23 @@
 </div>
 
 <script>
-    // ⚠️ 請更換成您正確的 Apps Script 網址
+    // ⚠️ 請務必確認此處為後端發布「新版本」後產生的正確 /exec 網址
     const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
 
-    // 精確 3 關題目
+    // 3關專屬 Python 題目庫
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
         "items = [1, 2, 3]; items.append(4)"
     ];
 
-    let currentLevel = 0; 
-    let currentSeatNumber = "";
-    let targetSentence = "";
-    let startTime = null;
-    let timerInterval = null;
-    let isTestActive = false;
-    
-    let speedHistory = []; 
-    let secondsElapsed = 0;
+    let currentLevel = 0; let currentSeatNumber = ""; let targetSentence = "";
+    let startTime = null; let timerInterval = null; let isTestActive = false;
+    let speedHistory = []; let secondsElapsed = 0;
+    let liveChart = null; let playbackChart = null; let playbackInterval = null;
+    let globalAdminData = []; let glassCallback = null;
 
-    let liveChart = null;
-    let playbackChart = null;
-    let playbackInterval = null;
-    let globalAdminData = [];
-    let glassCallback = null; // 紀錄玻璃面板按鈕按下去之後要執行的動作
-
-    // 初始化座號
+    // 初始化 1-29 座號
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -234,59 +261,67 @@
         seatSelect.appendChild(opt);
     }
 
-    // 呼叫玻璃面板提示框的函式
+    // 核心控制：控制系統訊息磨砂面板
     function openGlassAlert(title, message, callback = null) {
         document.getElementById('glassTitle').textContent = title;
         document.getElementById('glassMsg').textContent = message;
         glassCallback = callback;
         document.getElementById('glassAlert').classList.add('active');
     }
-
     function closeGlassAlert() {
         document.getElementById('glassAlert').classList.remove('active');
-        if (glassCallback) {
-            glassCallback();
-            glassCallback = null;
-        }
+        if (glassCallback) { glassCallback(); glassCallback = null; }
     }
 
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-    }
-
-    // 後台登入驗證
-    function handleNavClick() {
+    // 核心控制：控制密碼輸入磨砂面板
+    function openPasswordPanel() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
-            let pass = prompt("請輸入後台管理密碼：");
-            if (!pass) return;
-
-            fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "checkPassword", password: pass }),
-                headers: { "Content-Type": "text/plain" }
-            })
-            .then(res => res.text()) 
-            .then(text => {
-                const data = JSON.parse(text);
-                if (data.status === "success") {
-                    openGlassAlert("驗證成功", "已成功登入管理後台！", function() {
-                        btn.textContent = "返回測試";
-                        showPage('adminPage');
-                        fetchAdminData();
-                    });
-                } else {
-                    openGlassAlert("驗證失敗", "密碼輸入錯誤，拒絕存取。");
-                }
-            }).catch(() => {
-                openGlassAlert("網路通訊失敗", "請確認後端 Google 應用程式是否發布成功。");
-            });
+            document.getElementById('adminPasswordInput').value = "";
+            document.getElementById('glassPasswordOverlay').classList.add('active');
+            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 200);
         } else {
             btn.textContent = "切換至後台";
             resetTestSystem();
             showPage('loginPage');
         }
+    }
+    function closePasswordPanel() {
+        document.getElementById('glassPasswordOverlay').classList.remove('active');
+    }
+
+    // 送出後台驗證密碼
+    function submitAdminPassword() {
+        const pass = document.getElementById('adminPasswordInput').value;
+        if (!pass) return;
+
+        closePasswordPanel();
+
+        fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "checkPassword", password: pass }),
+            headers: { "Content-Type": "text/plain" }
+        })
+        .then(res => res.text()) 
+        .then(text => {
+            const data = JSON.parse(text);
+            if (data.status === "success") {
+                openGlassAlert("驗證成功", "身分核對正確，正在進入後台讀取資料...", function() {
+                    document.getElementById('toggleModeBtn').textContent = "返回測試";
+                    showPage('adminPage');
+                    fetchAdminData();
+                });
+            } else {
+                openGlassAlert("驗證失敗", "您輸入的管理密碼不正確，請重新確認。");
+            }
+        }).catch(() => {
+            openGlassAlert("CORS 政策封鎖 / 連線失敗", "後端 Google 應用程式可能未正確發布、或未將權限改為「所有人(Anyone)」。請檢查主控台。");
+        });
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
     }
 
     function startTest() {
@@ -297,7 +332,7 @@
         loadLevel();
         
         const inputField = document.getElementById('typingInput');
-        inputField.addEventListener('paste', function(e) { e.preventDefault(); openGlassAlert("安全警告", "系統偵測到複製行為，此處禁止直接貼上程式碼！"); });
+        inputField.addEventListener('paste', function(e) { e.preventDefault(); openGlassAlert("操作受限", "為確保練習成效，系統禁止在此處直接貼上程式碼！"); });
         inputField.addEventListener('copy', function(e) { e.preventDefault(); });
         inputField.addEventListener('drop', function(e) { e.preventDefault(); });
     }
@@ -308,18 +343,13 @@
         renderText("");
         
         const inputField = document.getElementById('typingInput');
-        inputField.value = "";
-        inputField.disabled = false;
-        inputField.focus();
+        inputField.value = ""; inputField.disabled = false; inputField.focus();
         
-        speedHistory = [0];
-        secondsElapsed = 0;
-        isTestActive = false;
+        speedHistory = [0]; secondsElapsed = 0; isTestActive = false;
         clearInterval(timerInterval);
         document.getElementById('timer').textContent = "0";
         document.getElementById('liveWpm').textContent = "0";
         document.getElementById('liveAcc').textContent = "100%";
-        
         initLiveChart();
     }
 
@@ -333,7 +363,7 @@
                     span.classList.add('correct');
                 } else {
                     span.style.color = '#f87171';
-                    span.style.backgroundColor = 'rgba(248,113,113,0.1)';
+                    span.style.backgroundColor = 'rgba(248,113,113,0.15)';
                 }
             } else if (i === inputVal.length) {
                 span.classList.add('current');
@@ -346,7 +376,6 @@
     function handleTyping() {
         const inputField = document.getElementById('typingInput');
         const inputVal = inputField.value;
-        
         renderText(inputVal);
 
         if (!isTestActive && inputVal.length > 0) {
@@ -355,7 +384,6 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
-        // 當前關卡順利打完
         if (inputVal === targetSentence) {
             clearInterval(timerInterval);
             inputField.disabled = true;
@@ -368,10 +396,9 @@
                 currentLevel++;
                 setTimeout(loadLevel, 600); 
             } else {
-                // 3 關打完，跳出客製化玻璃葉面，按下確認後返回首頁
                 openGlassAlert(
-                    "🎉 挑戰成功！", 
-                    `恭喜完成全數 3 關 Python 程式碼測試！成績與速度已同步上傳至老師的試算表。`, 
+                    "🎉 全數挑戰成功！", 
+                    `恭喜「使用者」完成 3 關 Python 脈絡打字測試！所有即時數據已成功封包並上傳後台試算表。`, 
                     function() {
                         resetTestSystem();
                         showPage('loginPage');
@@ -422,7 +449,7 @@
             headers: { "Content-Type": "text/plain" }
         })
         .then(res => res.text())
-        .catch(err => console.log("網路重試中..."));
+        .catch(() => console.log("連線佇列重試中..."));
     }
 
     function resetTestSystem() {
@@ -430,7 +457,7 @@
         if(liveChart) liveChart.destroy();
     }
 
-    // ================= 後台核心邏輯 =================
+    // ================= 後台核心數據處理 =================
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
@@ -443,17 +470,14 @@
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3">目前尚無學生成績。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3">目前資料庫尚無任何學生成績紀錄。</td></tr>`;
                 return;
             }
-            
             let displayData = [...data].reverse();
-
             displayData.forEach((row, index) => {
                 let tr = document.createElement('tr');
                 let originalIndex = data.length - 1 - index;
                 tr.onclick = () => playStudentDemo(originalIndex); 
-                
                 tr.innerHTML = `
                     <td>${row.timestamp}</td>
                     <td>${row.number} 號</td>
@@ -462,24 +486,22 @@
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認後端設定是否正確。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否再次更新但忘了發布「新版本」？</td></tr>`;
         });
     }
 
     function playStudentDemo(index) {
         clearInterval(playbackInterval);
         document.getElementById('adminChartBox').style.display = "block";
-        
         const student = globalAdminData[index];
-        document.getElementById('chartTitle').textContent = `${student.number} 號同學 打字脈絡模擬播放 (該關速度：${student.wpm} WPM)`;
-
+        document.getElementById('chartTitle').textContent = `${student.number} 號同學 速度脈絡重建模擬 (最終成績：${student.wpm} WPM)`;
         const historyData = student.history || [0];
         
         if(playbackChart) playbackChart.destroy();
         const ctx = document.getElementById('adminPlaybackChart').getContext('2d');
         playbackChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#ffd43b', backgroundColor: 'rgba(255, 212, 59, 0.1)', fill: true, tension: 0.2 }] },
+            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#ffd43b', backgroundColor: 'rgba(255, 212, 59, 0.05)', fill: true, tension: 0.2 }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 120 } } }
         });
 
