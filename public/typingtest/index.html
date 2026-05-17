@@ -153,10 +153,8 @@
         .page.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🚪 登入頁面排版 - 彈性盒佈局優化 */
+        /* 🚪 登入頁面排版 */
         #loginPage {
-            display: flex;
-            flex-direction: column;
             width: 100%;
         }
 
@@ -165,10 +163,15 @@
         select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.02); }
         select option { color: #000; background: #fff; }
 
-        /* 🎯 完美對齊右下角，絕不超出磨砂外框 */
+        /* 🛠️ 新增獨立按鈕控制列：確保按鈕收納在容器內，靠右對齊且不擠壓邊緣 */
+        .btn-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            margin-top: 40px;
+        }
+
         .btn-bottom-right { 
-            align-self: flex-end; /* 靠右對齊 */
-            margin-top: 20px; /* 與上方表單拉開距離 */
             background: linear-gradient(135deg, var(--accent-color), #f97316); 
             color: #fff; 
             border: none; 
@@ -180,8 +183,8 @@
             box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        button.btn-bottom-right:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); }
-        button.btn-bottom-right:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
+        .btn-bottom-right:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); }
+        .btn-bottom-right:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
         
         /* 傳統居中按鈕 */
         button.btn-center {
@@ -373,7 +376,9 @@
             <p style="color: var(--text-muted); margin-bottom: 15px; font-family: sans-serif;">請選擇您的座號開始挑戰：</p>
             <select id="seatNumber"></select>
         </div>
-        <button class="btn-bottom-right" id="startBtn" onclick="startTest()">開始 4 關連續測試</button>
+        <div class="btn-row">
+            <button class="btn-bottom-right" id="startBtn" onclick="startTest()">開始 4 關連續測試</button>
+        </div>
     </div>
 
     <div id="testPage" class="page">
@@ -772,7 +777,7 @@
                     <td>${student.lastTimestamp}</td>
                     <td><b>${student.seatNumber} 號</b></td>
                     <td style="color: var(--accent-color); font-weight:700;">${avgWpm} WPM</td>
-                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 4 关</span></td>
+                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 4 關</span></td>
                 `;
                 tbody.appendChild(tr);
             });
