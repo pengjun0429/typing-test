@@ -237,8 +237,8 @@
 </div>
 
 <script>
-    // ⚠️ 請務必確認此處為後端發布「新版本」後產生的正確 /exec 網址
-    const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
+    // ⚠️ 請更換成您重新部署後的正確 Apps Script 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbwxYhBXK_cnP5TsGGC_W_A22vULI1B85Mf-0jGLdwVO9mS8i46rT_rZzhDMYh4exYqr/exec"; 
 
     // 3關專屬 Python 題目庫
     const sentences = [
@@ -261,7 +261,7 @@
         seatSelect.appendChild(opt);
     }
 
-    // 核心控制：控制系統訊息磨砂面板
+    // 控制系統訊息磨砂面板
     function openGlassAlert(title, message, callback = null) {
         document.getElementById('glassTitle').textContent = title;
         document.getElementById('glassMsg').textContent = message;
@@ -273,7 +273,7 @@
         if (glassCallback) { glassCallback(); glassCallback = null; }
     }
 
-    // 核心控制：控制密碼輸入磨砂面板
+    // 控制密碼輸入磨砂面板
     function openPasswordPanel() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
@@ -290,7 +290,7 @@
         document.getElementById('glassPasswordOverlay').classList.remove('active');
     }
 
-    // 送出後台驗證密碼
+    // 🚀 已優化：使用簡單請求模式發送，徹底避開 Preflight CORS 檢查
     function submitAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value;
         if (!pass) return;
@@ -299,12 +299,11 @@
 
         fetch(API_URL, {
             method: "POST",
-            body: JSON.stringify({ action: "checkPassword", password: pass }),
-            headers: { "Content-Type": "text/plain" }
+            mode: "cors",
+            body: JSON.stringify({ action: "checkPassword", password: pass })
         })
-        .then(res => res.text()) 
-        .then(text => {
-            const data = JSON.parse(text);
+        .then(res => res.json()) 
+        .then(data => {
             if (data.status === "success") {
                 openGlassAlert("驗證成功", "身分核對正確，正在進入後台讀取資料...", function() {
                     document.getElementById('toggleModeBtn').textContent = "返回測試";
@@ -314,8 +313,9 @@
             } else {
                 openGlassAlert("驗證失敗", "您輸入的管理密碼不正確，請重新確認。");
             }
-        }).catch(() => {
-            openGlassAlert("CORS 政策封鎖 / 連線失敗", "後端 Google 應用程式可能未正確發布、或未將權限改為「所有人(Anyone)」。請檢查主控台。");
+        }).catch((err) => {
+            console.error(err);
+            openGlassAlert("系統連線失敗", "後端 Google 應用程式可能未正確發布新版本。請確認已選擇『新版本』且存取權限為『所有人』。");
         });
     }
 
@@ -442,14 +442,15 @@
         });
     }
 
+    // 🚀 已優化：移除自訂標頭，走安全簡單請求
     function submitScore(seat, wpm, history) {
         fetch(API_URL, {
             method: "POST",
-            body: JSON.stringify({ number: seat, wpm: wpm, history: history }),
-            headers: { "Content-Type": "text/plain" }
+            mode: "cors",
+            body: JSON.stringify({ number: seat, wpm: wpm, history: history })
         })
-        .then(res => res.text())
-        .catch(() => console.log("連線佇列重試中..."));
+        .then(res => res.json())
+        .catch((err) => console.log("背景同步中...", err));
     }
 
     function resetTestSystem() {
@@ -457,16 +458,19 @@
         if(liveChart) liveChart.destroy();
     }
 
-    // ================= 後台核心數據處理 =================
+    // ================= 後台數據連線 =================
 
+    // 🚀 已優化：使用簡單 GET 模式穿透 Google 轉址阻擋
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
         tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
 
-        fetch(API_URL)
-        .then(res => res.text())
-        .then(text => {
-            const data = JSON.parse(text);
+        fetch(API_URL, {
+            method: "GET",
+            mode: "cors"
+        })
+        .then(res => res.json())
+        .then(data => {
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
@@ -485,8 +489,9 @@
                 `;
                 tbody.appendChild(tr);
             });
-        }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否再次更新但忘了發布「新版本」？</td></tr>`;
+        }).catch((err) => {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請檢查您的 Apps Script 是否已發布新版本。</td></tr>`;
         });
     }
 
