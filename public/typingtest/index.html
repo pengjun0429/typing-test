@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Code 挑戰賽 | 進階打字系統</title>
+    <title>Python Code  | 進階打字系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* =========================================
-           🎨 高級美化版核心變數 (好看點！)
+           🎨 高級美化版核心變數
            ========================================= */
         :root {
             /* 🌌 暗色模式 - 頂級深邃藍 */
             --bg-gradient: radial-gradient(circle at 10% 20%, rgba(15, 23, 42, 1) 0%, rgba(11, 19, 36, 1) 90.1%);
-            --card-bg: rgba(30, 41, 59, 0.5); /* 更輕薄的玻璃 */
+            --card-bg: rgba(30, 41, 59, 0.5); 
             --card-border: rgba(255, 255, 255, 0.06);
             --text-color: #f1f5f9;
             --text-muted: #94a3b8;
@@ -25,13 +25,13 @@
             --glass-card-bg: rgba(30, 41, 59, 0.4);
             --glass-card-msg: #cbd5e1;
             
-            /* ✨ 固定特徵色 - 活力黃 & 霓虹藍 */
-            --accent-color: #fbbf24; /* 更鮮豔的琥珀黃 */
+            /* ✨ 固定特徵色 - 活力黃 & 科技藍 */
+            --accent-color: #fbbf24; 
             --accent-glow: rgba(251, 191, 36, 0.3);
-            --info-color: #38bdf8; /* 科技藍 */
+            --info-color: #38bdf8; 
             --info-glow: rgba(56, 189, 248, 0.3);
-            --success-color: #4ade80; /* 霓虹綠 */
-            --error-color: #f87171; /* 活力紅 */
+            --success-color: #4ade80; 
+            --error-color: #f87171; 
         }
 
         /* ☀️ 亮色模式 - 珠光柔白 */
@@ -50,7 +50,7 @@
             --glass-card-bg: rgba(255, 255, 255, 0.6);
             --glass-card-msg: #475569;
             
-            --accent-color: #d97706; /* 亮色下更有質感的深黃 */
+            --accent-color: #d97706; 
             --accent-glow: rgba(217, 119, 6, 0.1);
             --success-color: #16a34a;
         }
@@ -83,11 +83,9 @@
             position: relative; 
             transition: all 0.4s ease;
         }
-        [data-theme="dark"] .container {
-            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
-        }
+        [data-theme="dark"] .container { box-shadow: 0 25px 80px rgba(0,0,0,0.3); }
 
-        /* 高級樣式按鈕 */
+        /* 後台導覽按鈕 */
         .nav-btn { 
             position: absolute; 
             top: 25px; 
@@ -115,7 +113,7 @@
         .theme-btn {
             position: absolute;
             top: 25px;
-            right: 160px; /* 避開後台按鈕 */
+            right: 160px; 
             background: rgba(15, 23, 42, 0.1);
             border: 1px solid var(--card-border);
             color: var(--text-color);
@@ -131,7 +129,6 @@
             transform: rotate(15deg) scale(1.1);
         }
 
-        /* 標題樣式 */
         h2 { 
             text-align: center; 
             margin-bottom: 35px; 
@@ -154,7 +151,7 @@
         .page.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 儀表板與卡片樣式 */
+        /* 儀表板資訊卡 */
         .dashboard { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; text-align: center; flex-wrap: wrap; }
         .dash-card {
             background: rgba(15, 23, 42, 0.1);
@@ -171,13 +168,11 @@
         
         .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-glow); }
 
-        /* 表單與輸入框 */
         .form-group { text-align: center; margin: 30px 0; }
         select, input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 16px; font-size: 16px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.02); }
         select option { color: #000; background: #fff; }
 
-        /* 漸層挑戰按鈕 */
         button.btn { 
             background: linear-gradient(135deg, var(--accent-color), #f97316); 
             color: #fff; 
@@ -192,14 +187,10 @@
             box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        button.btn:hover { 
-            transform: translateY(-3px) scale(1.03); 
-            box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); 
-        }
-        button.btn:active { transform: translateY(-1px); }
+        button.btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); }
         button.btn:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
         
-        /* 打字區域 - 現代代碼樣式 */
+        /* 代碼顯示區 */
         .word-display { 
             font-size: 22px; 
             color: var(--word-display-untyped); 
@@ -217,21 +208,12 @@
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
             position: relative;
         }
-        .word-display::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
-            pointer-events: none; border-radius: 16px;
-        }
 
         .word-display span.correct { color: var(--success-color); text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); } 
         [data-theme="light"] .word-display span.correct { color: #16a34a; text-shadow: none; }
-        
         .word-display span.error { color: var(--error-color); background-color: rgba(248, 113, 113, 0.15); border-radius: 3px; }
-
         .word-display span.current { background-color: rgba(251, 191, 36, 0.3); color: var(--text-color); border-radius: 3px; border-bottom: 2px solid var(--accent-color); }
-        [data-theme="light"] .word-display span.current { background-color: rgba(251, 191, 36, 0.2); }
         
-        /* 下方輸入框 */
         .input-field { 
             width: 100%; max-width: 100%; background: transparent; 
             border: none; border-bottom: 3px solid var(--input-border); border-radius: 0; 
@@ -241,7 +223,7 @@
         }
         .input-field:focus { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(251, 191, 36, 0.05); }
         
-        /* 📈 後台重播區樣式美化 */
+        /* 📈 後台重播面板 */
         .admin-playback-box { 
             display: none; 
             background: var(--word-display-bg); 
@@ -272,63 +254,64 @@
         }
         [data-theme="light"] .playback-monitor { color: #16a34a; }
 
-        .playback-controls-row {
-            display: flex; justify-content: center; align-items: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; font-family: sans-serif;
-        }
+        .playback-controls-row { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; font-family: sans-serif; }
         .playback-controls-row .label { color: var(--text-muted); font-size: 14px; }
         
         .level-toggle-btn {
-            background: rgba(15, 23, 42, 0.05);
-            border: 1px solid var(--input-border);
-            color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s ease;
+            background: rgba(15, 23, 42, 0.05); border: 1px solid var(--input-border); color: var(--text-muted);
+            padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: all 0.2s ease;
         }
         .level-toggle-btn:hover { background: rgba(15, 23, 42, 0.1); color: var(--text-color); }
         .level-toggle-btn.active {
-            background: var(--info-color);
-            border-color: var(--info-color);
-            color: #fff;
-            box-shadow: 0 4px 12px var(--info-glow);
-            font-weight: 600;
+            background: var(--info-color); border-color: var(--info-color); color: #fff;
+            box-shadow: 0 4px 12px var(--info-glow); font-weight: 600;
         }
 
         .playback-cursor { display: inline-block; width: 10px; background-color: var(--info-color); animation: blink 0.8s infinite; margin-left: 2px; }
         .playback-cursor.stopped { animation: none; background-color: transparent; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
         .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); border-top: 1px solid var(--input-border); padding-top: 15px; }
         .playback-dash span b { color: var(--text-color); font-size: 18px; font-weight: 700; margin-left: 5px; }
 
-        /* 圖表樣式 */
         .chart-container { width: 100%; height: 140px; margin-top: 35px; border-top: 1px solid var(--input-border); padding-top: 15px; }
         
-        /* 表格樣式美化 */
+        /* 表格與彈窗覆蓋層 */
         table { width: 100%; border-collapse: collapse; margin-top: 25px; font-family: sans-serif; font-size: 15px; }
         th, td { padding: 18px 15px; text-align: center; border-bottom: 1px solid var(--card-border); }
         th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
         tbody tr { cursor: pointer; transition: background 0.3s; }
         tbody tr:hover { background: var(--table-hover); }
-        tbody td { color: var(--text-color); }
-        tbody td b { color: var(--text-color); }
 
-        /* 彈窗樣式美化 */
-        .glass-overlay { z-index: 10000; }
-        .glass-card { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s; }
-        
-        .password-style { 
-            border-color: var(--info-color); 
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px var(--info-glow); 
+        .glass-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--glass-overlay-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
         }
+        .glass-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .glass-card {
+            background: var(--glass-card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 35px 40px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center;
+            transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .glass-overlay.active .glass-card { transform: scale(1); }
+        
+        .password-style { border-color: var(--info-color); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px var(--info-glow); }
         .password-style .glass-title { color: var(--info-color); text-shadow: 0 0 10px var(--info-glow); }
+        
+        .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; }
+        .glass-msg { font-size: 15px; color: var(--glass-card-msg); line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
         
         .glass-btn {
             background: linear-gradient(135deg, var(--accent-color), #f97316);
-            padding: 14px 35px; border-radius: 10px; font-weight: 600; font-size: 14px;
+            color: #fff; border: none; padding: 12px 30px; font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2); transition: all 0.2s; font-family: sans-serif; display: inline-block; margin: 5px;
         }
-        .glass-btn.btn-secondary { background: rgba(15,23,42,0.05); }
+        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4); }
+        .glass-btn.btn-secondary { background: rgba(15,23,42,0.05); color: var(--text-color); border: 1px solid var(--input-border); box-shadow: none; }
     </style>
 </head>
 <body data-theme="dark">
@@ -338,7 +321,7 @@
 <div class="glass-overlay" id="glassAlert">
     <div class="glass-card">
         <div class="glass-title" id="glassTitle">系統提示</div>
-        <div class="glass-msg" id="glassMsg">內容載入中...</div>
+        <div class="glass-msg" id="glassMsg">說明載入中...</div>
         <button class="glass-btn" onclick="closeGlassAlert()">確認</button>
     </div>
 </div>
@@ -436,10 +419,8 @@
 </div>
 
 <script>
-    // ⚠️ =========================================
-    // 請填入您的後端網址 (與 Apps Script 部署 URL 相同)
-    // =========================================
-    const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
+    // ⚠️ 請置換成您的 Apps Script API 部署網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
 
     const sentences = [
         "print('hello python')",
@@ -455,7 +436,7 @@
     let globalAdminData = []; let glassCallback = null;
     let currentSelectedSeatRecords = [];
 
-    // ✨ 主題切換邏輯
+    // ✨ 主題切換
     function toggleTheme() {
         const body = document.body;
         const themeBtn = document.getElementById('themeBtn');
@@ -482,7 +463,7 @@
         liveChart.update('none');
     }
 
-    // 初始化座號選單
+    // 初始化 1-29 座號
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -513,9 +494,7 @@
             showPage('loginPage');
         }
     }
-    function closePasswordPanel() {
-        document.getElementById('glassPasswordOverlay').classList.remove('active');
-    }
+    function closePasswordPanel() { document.getElementById('glassPasswordOverlay').classList.remove('active'); }
 
     function submitAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value;
@@ -530,17 +509,17 @@
         .then(res => res.json()) 
         .then(data => {
             if (data.status === "success") {
-                openGlassAlert("✅ 驗證成功", "歡迎回來，管理員。正在載入班級數據...", function() {
+                openGlassAlert("✅ 驗證成功", "身份核對正確，正在載入班級數據...", function() {
                     document.getElementById('toggleModeBtn').textContent = "返回測試";
                     showPage('adminPage');
                     fetchAdminData();
                 });
             } else {
-                openGlassAlert("❌ 驗證失敗", "密碼錯誤，請重新確認。");
+                openGlassAlert("❌ 驗證失敗", "管理密碼錯誤，請重新確認。");
             }
         }).catch((err) => {
             console.error(err);
-            openGlassAlert("⚠️ 系統連線失敗", "無法連接至後端。請確認網路連線或 API 網址。");
+            openGlassAlert("⚠️ 系統連線失敗", "無法連接至雲端資料庫。");
         });
     }
 
@@ -556,17 +535,14 @@
         startBtn.disabled = true;
         startBtn.textContent = "正在線上核對座號...";
 
-        fetch(`${API_URL}?checkSeat=${selectedSeat}`, {
-            method: "GET",
-            mode: "cors"
-        })
+        fetch(`${API_URL}?checkSeat=${selectedSeat}`, { method: "GET", mode: "cors" })
         .then(res => res.json())
         .then(data => {
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關挑戰測試";
             
             if (data.duplicate) {
-                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已完成過本次測試。每人限挑戰一次。`);
+                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已經完成過本次 Python 測試囉！`);
             } else {
                 currentSeatNumber = selectedSeat;
                 currentLevel = 0; 
@@ -580,13 +556,13 @@
             console.error(err);
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關挑戰測試";
-            openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號核對。");
+            openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號驗證。");
         });
     }
 
     function setupSecurityRestrictions() {
         const inputField = document.getElementById('typingInput');
-        inputField.addEventListener('paste', e => { e.preventDefault(); openGlassAlert("操作受限", "禁止使用貼上功能，請手動輸入代碼以達成練習效果。"); });
+        inputField.addEventListener('paste', e => { e.preventDefault(); openGlassAlert("操作受限", "禁止貼上，請手動輸入程式碼以達成練習效果。"); });
         inputField.addEventListener('copy', e => e.preventDefault());
         inputField.addEventListener('drop', e => e.preventDefault());
     }
@@ -637,41 +613,23 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
-        // 檢查是否所有輸入都正確
-        let isCorrect = true;
-        if(inputVal.length !== targetSentence.length) {
-            isCorrect = false;
-        } else {
-            for(let i=0; i<targetSentence.length; i++) {
-                if(inputVal[i] !== targetSentence[i]) {
-                    isCorrect = false; break;
-                }
-            }
-        }
-
-        if (isCorrect) {
+        if (inputVal === targetSentence) {
             clearInterval(timerInterval);
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
-            // 避免除以零
             if(finalTime < 0.01) finalTime = 0.01;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime);
             
-            // 提交這關的分數
             submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
 
             if (currentLevel < sentences.length - 1) {
                 currentLevel++;
                 setTimeout(loadLevel, 600); 
             } else {
-                openGlassAlert(
-                    "🎉 挑戰達成！", 
-                    `恭喜完成所有關卡。數據已上傳。`, 
-                    function() {
-                        resetTestSystem();
-                        showPage('loginPage');
-                    }
-                );
+                openGlassAlert("🎉 全數挑戰成功！", `恭喜完成 3 關 Python 測試！即時數據已同步上傳。`, function() {
+                    resetTestSystem();
+                    showPage('loginPage');
+                });
             }
         }
     }
@@ -697,47 +655,25 @@
         speedHistory.push(wpm);
         liveChart.data.labels.push(secondsElapsed);
         liveChart.data.datasets[0].data.push(wpm);
-        liveChart.update('none'); // 使用 'none' 模式避免不必要的動畫
+        liveChart.update('none');
     }
 
     function initLiveChart() {
         if(liveChart) liveChart.destroy();
         const ctx = document.getElementById('liveChart').getContext('2d');
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
         
         liveChart = new Chart(ctx, {
             type: 'line',
             data: { 
                 labels: [0], 
                 datasets: [{ 
-                    data: [0], 
-                    borderColor: '#fbbf24', 
-                    borderWidth: 3, 
-                    tension: 0.3, 
-                    pointRadius: 0,
-                    fill: true,
-                    backgroundColor: 'rgba(251, 191, 36, 0.05)'
+                    data: [0], borderColor: '#fbbf24', borderWidth: 3, tension: 0.3, pointRadius: 0, fill: true, backgroundColor: 'rgba(251, 191, 36, 0.05)'
                 }] 
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                animation: false,
+                responsive: true, maintainAspectRatio: false, animation: false,
                 plugins: { legend: { display: false } }, 
-                scales: { 
-                    x: { display: false, grid: { display: false } }, 
-                    y: { 
-                        display: true, 
-                        position: 'right',
-                        ticks: {
-                            maxTicksLimit: 3,
-                            font: { size: 10 }
-                        },
-                        grid: { 
-                            drawBorder: false,
-                        } 
-                    } 
-                } 
+                scales: { x: { display: false }, y: { display: true, position: 'right', ticks: { maxTicksLimit: 3, font: { size: 10 } } } } 
             }
         });
         updateChartColors();
@@ -750,7 +686,7 @@
             body: JSON.stringify({ number: seat, wpm: wpm, history: history, typedText: typedText })
         })
         .then(res => res.json())
-        .catch((err) => console.log("數據同步中...", err));
+        .catch(err => console.log("背景資料同步中...", err));
     }
 
     function resetTestSystem() {
@@ -763,7 +699,7 @@
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = `<tr><td colspan="4">正在同步最新挑戰紀錄...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4">正在即時讀取資料庫...</td></tr>`;
 
         fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
@@ -771,11 +707,10 @@
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4">目前資料庫無紀錄。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4">目前資料庫尚無學生成績紀錄。</td></tr>`;
                 return;
             }
 
-            // 依座號分組
             let studentMap = {};
             data.forEach(row => {
                 let seat = row.number;
@@ -798,14 +733,14 @@
                 tr.innerHTML = `
                     <td>${student.lastTimestamp}</td>
                     <td><b>${student.seatNumber} 號</b></td>
-                    <td style="color: var(--accent-color); font-weight:700;">${avgWpm}</td>
-                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 3</span></td>
+                    <td style="color: var(--accent-color); font-weight:700;">${avgWpm} WPM</td>
+                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 3 關</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }).catch((err) => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="4" style="color: var(--error-color);">無法連線至 API。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="color: var(--error-color);">讀取失敗，請檢查 API 發布網址。</td></tr>`;
         });
     }
 
@@ -827,17 +762,13 @@
             btn.onclick = function() {
                 document.querySelectorAll('.level-toggle-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
                 clearTimeout(playbackIntervalId);
                 executeCorePlayback(rec);
             };
             btnArea.appendChild(btn);
         });
 
-        // 自動播放第一關
-        if (btnArea.firstChild) {
-            btnArea.firstChild.click();
-        }
+        if (btnArea.firstChild) btnArea.firstChild.click();
     }
 
     function executeCorePlayback(record) {
@@ -863,7 +794,6 @@
             document.getElementById('playbackWpm').textContent = currentWpm;
 
             let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
-            // 速度為0時，依然至少要打一個字，避免卡住
             if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
 
             if (charsToTypeThisSecond > 0) {
