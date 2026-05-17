@@ -85,7 +85,7 @@
         }
         [data-theme="dark"] .container { box-shadow: 0 25px 80px rgba(0,0,0,0.3); }
 
-        /* 後台導覽按鈕 */
+        /* 🎯 右上角後台導覽按鈕 - 修正定位與層級 */
         .nav-btn { 
             position: absolute; 
             top: 25px; 
@@ -110,7 +110,7 @@
             transform: translateY(-2px);
         }
         
-        /* 🌗 主題切換按鈕 */
+        /* 🎯 右上角主題切換按鈕 - 修正定位與層級 */
         .theme-btn {
             position: absolute;
             top: 25px;
@@ -163,15 +163,8 @@
         select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.02); }
         select option { color: #000; background: #fff; }
 
-        /* 🛠️ 新增獨立按鈕控制列：確保按鈕收納在容器內，靠右對齊且不擠壓邊緣 */
-        .btn-row {
-            display: flex;
-            justify-content: flex-end;
-            width: 100%;
-            margin-top: 40px;
-        }
-
-        .btn-bottom-right { 
+        /* 🎯 開始測試按鈕：完美水平居中 */
+        .btn-center {
             background: linear-gradient(135deg, var(--accent-color), #f97316); 
             color: #fff; 
             border: none; 
@@ -179,20 +172,14 @@
             font-size: 16px; 
             font-weight: 600; 
             border-radius: 12px; 
-            cursor: pointer; 
+            cursor: pointer;
+            display: block; 
+            margin: 40px auto 0; 
             box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-bottom-right:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4); }
-        .btn-bottom-right:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
-        
-        /* 傳統居中按鈕 */
-        button.btn-center {
-            background: linear-gradient(135deg, var(--accent-color), #f97316); 
-            color: #fff; border: none; padding: 14px 35px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer;
-            display: block; margin: 30px auto 0; box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); transition: all 0.3s;
-        }
-        button.btn-center:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(251, 191, 36, 0.3); }
+        .btn-center:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(251, 191, 36, 0.3); }
+        .btn-center:disabled { background: #64748b; color: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
 
         /* 儀表板資訊卡 */
         .dashboard { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; text-align: center; flex-wrap: wrap; }
@@ -303,26 +290,41 @@
 
         .chart-container { width: 100%; height: 140px; margin-top: 35px; border-top: 1px solid var(--input-border); padding-top: 15px; }
         
-        /* 表格與彈窗覆蓋層 */
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-family: sans-serif; font-size: 15px; }
-        th, td { padding: 18px 15px; text-align: center; border-bottom: 1px solid var(--card-border); }
-        th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
-        tbody tr { cursor: pointer; transition: background 0.3s; }
-        tbody tr:hover { background: var(--table-hover); }
-
+        /* 🎯 彈窗覆蓋層 - 確保 fixed 鋪滿全螢幕且居中 */
         .glass-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--glass-overlay-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            display: flex; justify-content: center; align-items: center; z-index: 10000;
-            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh;
+            background: var(--glass-overlay-bg); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10000;
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity 0.4s ease;
         }
         .glass-overlay.active { opacity: 1; pointer-events: auto; }
         
+        /* 🎯 彈窗本體 - 保持置中與比例 */
         .glass-card {
-            background: var(--glass-card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--card-border); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            padding: 35px 40px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center;
-            transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--glass-card-bg); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); 
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 35px 40px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 450px; 
+            text-align: center;
+            transform: scale(0.9); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto; /* 強制於 flex 容器中置中 */
         }
         .glass-overlay.active .glass-card { transform: scale(1); }
         
@@ -339,6 +341,13 @@
         }
         .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4); }
         .glass-btn.btn-secondary { background: rgba(15,23,42,0.05); color: var(--text-color); border: 1px solid var(--input-border); box-shadow: none; }
+
+        /* 表格排版 */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-family: sans-serif; font-size: 15px; }
+        th, td { padding: 18px 15px; text-align: center; border-bottom: 1px solid var(--card-border); }
+        th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
+        tbody tr { cursor: pointer; transition: background 0.3s; }
+        tbody tr:hover { background: var(--table-hover); }
     </style>
 </head>
 <body data-theme="dark">
@@ -376,9 +385,7 @@
             <p style="color: var(--text-muted); margin-bottom: 15px; font-family: sans-serif;">請選擇您的座號開始挑戰：</p>
             <select id="seatNumber"></select>
         </div>
-        <div class="btn-row">
-            <button class="btn-bottom-right" id="startBtn" onclick="startTest()">開始 4 關連續測試</button>
-        </div>
+        <button class="btn-center" id="startBtn" onclick="startTest()">開始 4 關連續測試</button>
     </div>
 
     <div id="testPage" class="page">
@@ -528,6 +535,7 @@
     }
     function closePasswordPanel() { document.getElementById('glassPasswordOverlay').classList.remove('active'); }
 
+    // 後台密碼驗證
     function submitAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value;
         if (!pass) return;
