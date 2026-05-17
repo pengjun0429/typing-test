@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python 程式碼打字速度測試系統</title>
+    <title>Python 程式碼多關卡打字測試系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
             --card-bg: #1e293b;
-            --accent-color: #ffd43b; /* 使用 Python 經典黃色風格 */
+            --accent-color: #ffd43b; /* Python 經典黃 */
             --text-color: #f8fafc;
             --text-muted: #64748b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; } /* 使用等寬字型模擬寫程式 */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .container { background: var(--card-bg); padding: 40px; border-radius: 12px; width: 100%; max-width: 850px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; }
         .nav-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: sans-serif; }
@@ -23,17 +23,19 @@
         .page { display: none; }
         .page.active { display: block; }
 
-        /* 儀表板數據 */
-        .dashboard { display: flex; justify-content: center; gap: 60px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
+        /* 儀表板與進度條 */
+        .dashboard { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
         .dash-item { font-size: 14px; color: var(--text-muted); }
-        .dash-value { font-size: 48px; color: var(--text-color); font-weight: bold; margin-top: 5px; }
+        .dash-value { font-size: 36px; color: var(--text-color); font-weight: bold; margin-top: 5px; }
+        
+        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 15px; font-family: sans-serif; }
 
         /* 表單與按鈕 */
         .form-group { text-align: center; margin: 20px 0; font-family: sans-serif; }
         select, input { background: #334155; border: 1px solid #475569; color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; width: 100%; max-width: 250px; text-align: center; outline: none; }
         button.btn { background: var(--accent-color); color: #000; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; display: block; margin: 20px auto 0; font-family: sans-serif; }
         
-        /* 打字區域（防止複製反白、保留空格） */
+        /* 打字區域 */
         .word-display { 
             font-size: 20px; 
             color: var(--text-muted); 
@@ -42,7 +44,7 @@
             letter-spacing: 1px; 
             word-wrap: break-word; 
             min-height: 80px; 
-            white-space: pre-wrap; /* 核心：保留 Python 的空格縮排 */
+            white-space: pre-wrap;
             background: #090d16;
             padding: 20px;
             border-radius: 8px;
@@ -52,16 +54,14 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        .word-display span.correct { color: #4ade80; } /* 正確綠色 */
+        .word-display span.correct { color: #4ade80; } 
         .word-display span.current { background-color: rgba(255, 212, 59, 0.3); color: var(--text-color); }
         .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none;}
         .input-field:focus { border-color: var(--accent-color); }
         
-        /* 圖表外框 */
+        /* 圖表與後台 */
         .chart-container { width: 100%; height: 120px; margin-top: 30px; }
         .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; font-family: sans-serif; }
-
-        /* 後台表格 */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; }
         th { color: var(--text-muted); font-weight: normal; }
@@ -75,18 +75,19 @@
     <button class="nav-btn" id="toggleModeBtn" onclick="handleNavClick()">切換至後台</button>
 
     <div id="loginPage" class="page active">
-        <h2>選擇座號 (1-29 號) 模擬 Python 練習</h2>
+        <h2>選擇座號 (1-29 號) 連續 Python 測試</h2>
         <div class="form-group">
             <select id="seatNumber"></select>
-            <button class="btn" onclick="startTest()">進入測試</button>
+            <button class="btn" onclick="startTest()">開始多關卡測試</button>
         </div>
     </div>
 
     <div id="testPage" class="page">
+        <div class="progress-box" id="progressDisplay">目前關卡: 1 / 7</div>
         <div class="dashboard">
-            <div class="dash-item">WPM<div class="dash-value" id="liveWpm">0</div></div>
+            <div class="dash-item">本關 WPM<div class="dash-value" id="liveWpm">0</div></div>
             <div class="dash-item">精確度<div class="dash-value" id="liveAcc">100%</div></div>
-            <div class="dash-item">時間<div class="dash-value" id="timer">0</div></div>
+            <div class="dash-item">本關時間<div class="dash-value" id="timer">0</div></div>
         </div>
         <div class="word-display" id="sentenceDisplay"></div>
         <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方小寫 python 程式碼..." autocomplete="off" disabled>
@@ -97,7 +98,7 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>班級 Python 打字速度紀錄後台</h2>
+        <h2>班級 Python 多關卡紀錄後台</h2>
         <div style="text-align: center;">
             <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px;">重新整理數據</button>
         </div>
@@ -112,7 +113,7 @@
                 <tr>
                     <th>測試時間</th>
                     <th>座號</th>
-                    <th>最終速度 (WPM)</th>
+                    <th>該關速度 (WPM)</th>
                 </tr>
             </thead>
             <tbody id="adminTableBody">
@@ -123,10 +124,10 @@
 </div>
 
 <script>
-    // ⚠️ 請把下方引號內換成您剛才在第一步複製的「全新 Apps Script 網址」
-    const API_URL = "https://script.google.com/macros/s/AKfycbxle6fZdQHNPwmktp7pXBwpqj7bHtcxJYyBFPMIsrfdvAEMwOL75GLBV9fPw5kPWyds/exec"; 
+    // ⚠️ 務必在此處更換成您重新部署後的正確 Apps Script 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
 
-    // Python 題目庫（全小寫）
+    // 關卡庫：總共 7 關，完全小寫的 Python 程式碼
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
@@ -137,6 +138,7 @@
         "if x > 0: print('positive') else: print('negative')"
     ];
 
+    let currentLevel = 0; // 從第 0 關 (第一句) 開始
     let currentSeatNumber = "";
     let targetSentence = "";
     let startTime = null;
@@ -151,7 +153,7 @@
     let playbackInterval = null;
     let globalAdminData = [];
 
-    // 初始化座號選單：1 到 29 號
+    // 初始化座號：1 到 29 號
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -164,7 +166,7 @@
         document.getElementById(pageId).classList.add('active');
     }
 
-    // 後台密碼驗證
+    // 後台登入驗證
     function handleNavClick() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
@@ -186,7 +188,7 @@
                     alert("密碼錯誤！");
                 }
             }).catch(() => {
-                alert("通訊失敗，請確認 Apps Script 網址是否已更新部署為「所有人」可以存取。");
+                alert("通訊失敗，請檢查後端是否已發布新版本。");
             });
         } else {
             btn.textContent = "切換至後台";
@@ -197,30 +199,28 @@
 
     function startTest() {
         currentSeatNumber = seatSelect.value;
+        currentLevel = 0; // 重設關卡
         showPage('testPage');
         initLiveChart();
-        loadSentence();
+        loadLevel();
         
         const inputField = document.getElementById('typingInput');
         
-        // 🚫 嚴格防止複製、貼上與滑鼠拖曳
-        inputField.addEventListener('paste', function(e) {
-            e.preventDefault();
-            alert("系統提示：此處為程式碼練習，禁止直接貼上！");
-        });
+        // 🚫 嚴格防複製、貼上
+        inputField.addEventListener('paste', function(e) { e.preventDefault(); alert("禁止貼上！"); });
         inputField.addEventListener('copy', function(e) { e.preventDefault(); });
         inputField.addEventListener('drop', function(e) { e.preventDefault(); });
     }
 
-    function loadSentence() {
-        targetSentence = sentences[Math.floor(Math.random() * sentences.length)];
+    function loadLevel() {
+        document.getElementById('progressDisplay').textContent = `目前關卡: ${currentLevel + 1} / ${sentences.length}`;
+        targetSentence = sentences[currentLevel];
         renderText("");
         
         const inputField = document.getElementById('typingInput');
         inputField.value = "";
         inputField.disabled = false;
         inputField.focus();
-        inputField.addEventListener('input', handleTyping);
         
         speedHistory = [0];
         secondsElapsed = 0;
@@ -229,6 +229,8 @@
         document.getElementById('timer').textContent = "0";
         document.getElementById('liveWpm').textContent = "0";
         document.getElementById('liveAcc').textContent = "100%";
+        
+        initLiveChart();
     }
 
     function renderText(inputVal) {
@@ -263,16 +265,29 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
+        // 當前關卡打完
         if (inputVal === targetSentence) {
             clearInterval(timerInterval);
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
             
-            alert(`測試完成！速度：${finalWpm} WPM。正在自動上傳紀錄...`);
+            // 背景同步上傳成績
             submitScore(currentSeatNumber, finalWpm, speedHistory);
+
+            // 檢查是否還有下一關
+            if (currentLevel < sentences.length - 1) {
+                currentLevel++;
+                setTimeout(loadLevel, 600); // 稍微延遲 0.6 秒後自動載入下一關
+            } else {
+                alert("太棒了！你已完成所有 Python 程式碼打字測試關卡！");
+                resetTestSystem();
+                showPage('loginPage');
+            }
         }
     }
+
+    document.getElementById('typingInput').addEventListener('input', handleTyping);
 
     function updateStats() {
         secondsElapsed++;
@@ -313,12 +328,7 @@
             headers: { "Content-Type": "text/plain" }
         })
         .then(res => res.json())
-        .then(data => {
-            if(data.status === "success") { 
-                alert("成績同步成功！"); 
-                loadSentence(); 
-            }
-        });
+        .catch(err => console.log("網路重試中..."));
     }
 
     function resetTestSystem() {
@@ -333,10 +343,7 @@
         tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
 
         fetch(API_URL)
-        .then(res => {
-            if (!res.ok) throw new Error();
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             globalAdminData = data; 
             tbody.innerHTML = "";
@@ -349,7 +356,6 @@
 
             displayData.forEach((row, index) => {
                 let tr = document.createElement('tr');
-                
                 let originalIndex = data.length - 1 - index;
                 tr.onclick = () => playStudentDemo(originalIndex); 
                 
@@ -361,7 +367,7 @@
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已點擊部署發布「新版本」，且權限設為「所有人」。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已發布「新版本」並設定為「所有人」。</td></tr>`;
         });
     }
 
@@ -370,7 +376,7 @@
         document.getElementById('adminChartBox').style.display = "block";
         
         const student = globalAdminData[index];
-        document.getElementById('chartTitle').textContent = `${student.number} 號同學 Python 打字脈絡模擬播放中 (最終速度：${student.wpm} WPM)`;
+        document.getElementById('chartTitle').textContent = `${student.number} 號同學 打字脈絡模擬播放 (該關速度：${student.wpm} WPM)`;
 
         const historyData = student.history || [0];
         
