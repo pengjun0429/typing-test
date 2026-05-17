@@ -9,7 +9,7 @@
         :root {
             --bg-color: #0b1329;
             --card-bg: rgba(30, 41, 59, 0.7);
-            --accent-color: #ffd43b; 
+            --accent-color: #ffd43b; /* Python 經典黃 */
             --accent-glow: rgba(255, 212, 59, 0.4);
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
@@ -27,6 +27,7 @@
             overflow-x: hidden;
         }
 
+        /* 主容器 - 磨砂玻璃效果 */
         .container { 
             background: var(--card-bg); 
             backdrop-filter: blur(16px);
@@ -60,12 +61,14 @@
         .page { display: none; }
         .page.active { display: block; }
 
+        /* 儀表板與進度條 */
         .dashboard { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
         .dash-item { font-size: 14px; color: var(--text-muted); }
         .dash-value { font-size: 36px; color: var(--text-color); font-weight: bold; margin-top: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
         
         .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 15px; font-family: sans-serif; text-shadow: 0 0 8px var(--accent-glow); }
 
+        /* 表單與按鈕 */
         .form-group { text-align: center; margin: 20px 0; font-family: sans-serif; }
         select, input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 14px; font-size: 16px; border-radius: 8px; width: 100%; max-width: 280px; text-align: center; outline: none; transition: all 0.3s; }
         select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 10px var(--accent-glow); }
@@ -74,6 +77,7 @@
         button.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 212, 59, 0.5); }
         button.btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
         
+        /* 打字區域 */
         .word-display { 
             font-size: 20px; 
             color: #475569; 
@@ -96,6 +100,7 @@
         .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none; transition: border-color 0.3s; }
         .input-field:focus { border-color: var(--accent-color); }
         
+        /* 📈 後台虛擬打字機重播區樣式 */
         .admin-playback-box { 
             display: none; 
             background: rgba(15, 23, 42, 0.9); 
@@ -117,6 +122,7 @@
             letter-spacing: 1px;
             white-space: pre-wrap;
         }
+        /* 動態虛擬光標 */
         .playback-cursor {
             display: inline-block;
             width: 10px;
@@ -134,6 +140,7 @@
         .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); }
         .playback-dash span b { color: #fff; font-size: 18px; }
 
+        /* 圖表與後台列表 */
         .chart-container { width: 100%; height: 120px; margin-top: 30px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
         th, td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -141,6 +148,7 @@
         tbody tr { cursor: pointer; transition: background 0.2s; }
         tbody tr:hover { background: rgba(255,255,255,0.03); }
 
+        /* ✨ 全螢幕磨砂玻璃覆蓋層 */
         .glass-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -273,8 +281,8 @@
 </div>
 
 <script>
-    // ⚠️ 請換上您的後端網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbxi6g2rg5L6KBnXLATtUPJpmEIk-Bd4ApGw3EqKSvUrjUbojp591AUxIj6riZ9H14vv/exec"; 
+    // ⚠️ 填入您的 Google Apps Script 網路應用程式 URL
+    const API_URL = https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
 
     const sentences = [
         "print('hello python')",
@@ -289,7 +297,7 @@
     let playbackIntervalId = null; 
     let globalAdminData = []; let glassCallback = null;
 
-    // 初始化 1-29 座號
+    // 初始化 1-29 座號選單
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
@@ -356,6 +364,7 @@
         document.getElementById(pageId).classList.add('active');
     }
 
+    // 🔒 線上重複座號檢查，防止重複挑戰
     function startTest() {
         const selectedSeat = seatSelect.value;
         const startBtn = document.getElementById('startBtn');
@@ -451,7 +460,7 @@
             let finalTime = (new Date() - startTime) / 1000 / 60;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
             
-            // ✨ 修正：多傳送一個參數 targetSentence (即學生當下打對的完整原始文字)
+            // 傳送包括當前關卡文字的完整內容給資料庫
             submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
 
             if (currentLevel < sentences.length - 1) {
@@ -504,7 +513,6 @@
         });
     }
 
-    // ✨ 修正：加入 typedText 參數傳送
     function submitScore(seat, wpm, history, typedText) {
         fetch(API_URL, {
             method: "POST",
@@ -518,10 +526,10 @@
     function resetTestSystem() {
         clearInterval(timerInterval);
         if(liveChart) liveChart.destroy();
-        clearInterval(playbackIntervalId);
+        clearTimeout(playbackIntervalId);
     }
 
-    // ================= 後台數據連線 =================
+    // ================= 後台數據連線與重播處理 =================
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
@@ -554,13 +562,12 @@
         });
     }
 
+    // 🚀 核心優化：動態時間間隔均勻分流重播引擎
     function playStudentDemo(index) {
-        clearInterval(playbackIntervalId); 
+        clearTimeout(playbackIntervalId); // 清除上一個尚未執行的計時排程
         
         const student = globalAdminData[index];
         const historyData = student.history || [0];
-        
-        // ✨ 終極優化：優先使用資料庫裡存的「真實打字文字」，如果沒有舊有資料才進行舊有粗略猜測
         let mockFullText = student.typedText || sentences[0]; 
 
         document.getElementById('playbackVisualBox').style.display = "block";
@@ -573,36 +580,50 @@
 
         let currentCharIndex = 0;
         let currentSecond = 0;
-        let queue = []; 
 
-        playbackIntervalId = setInterval(() => {
-            if (queue.length === 0 && currentSecond < historyData.length) {
-                let currentWpm = historyData[currentSecond] || 0;
-                document.getElementById('playbackTimer').textContent = currentSecond;
-                document.getElementById('playbackWpm').textContent = currentWpm;
-
-                let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
-                if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
-
-                for (let i = 0; i < charsToTypeThisSecond; i++) {
-                    if (currentCharIndex < mockFullText.length) {
-                        queue.push(mockFullText[currentCharIndex]);
-                        currentCharIndex++;
-                    }
-                }
-                currentSecond++;
-            }
-
-            if (queue.length > 0) {
-                textScreen.textContent += queue.shift();
-            }
-
-            if (currentSecond >= historyData.length && queue.length === 0 && currentCharIndex >= mockFullText.length) {
-                clearInterval(playbackIntervalId);
+        // 核心調度引擎：每一秒執行一次，去動態平分這一秒內的打字間隔
+        function runNextSecond() {
+            if (currentSecond >= historyData.length || currentCharIndex >= mockFullText.length) {
                 document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${student.number} 號同學 模擬完畢`;
                 cursor.classList.add('stopped'); 
+                return;
             }
-        }, 50); 
+
+            let currentWpm = historyData[currentSecond] || 0;
+            document.getElementById('playbackTimer').textContent = currentSecond;
+            document.getElementById('playbackWpm').textContent = currentWpm;
+
+            // 換算這一秒內必須「均勻噴出」的總字數
+            let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
+            if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
+
+            if (charsToTypeThisSecond > 0) {
+                // ✨ 均勻切割：將 1000 毫秒切成 N 等分
+                let msPerChar = Math.floor(1000 / charsToTypeThisSecond);
+                let charCountSent = 0;
+
+                function triggerSingleChar() {
+                    if (charCountSent < charsToTypeThisSecond && currentCharIndex < mockFullText.length) {
+                        textScreen.textContent += mockFullText[currentCharIndex];
+                        currentCharIndex++;
+                        charCountSent++;
+                        // 利用動態微調的等待時間，精準銜接下一個字
+                        playbackIntervalId = setTimeout(triggerSingleChar, msPerChar);
+                    } else {
+                        // 這一秒的字字落入完畢，順暢切換到下一秒
+                        currentSecond++;
+                        runNextSecond();
+                    }
+                }
+                triggerSingleChar(); // 啟動一秒內的打字小流
+            } else {
+                // 如果 WPM 為 0 (學生在思考或停頓)，就乾等一秒再看下一秒
+                currentSecond++;
+                playbackIntervalId = setTimeout(runNextSecond, 1000);
+            }
+        }
+
+        runNextSecond(); // 啟動重播
     }
 </script>
 </body>
