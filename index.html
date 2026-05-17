@@ -99,16 +99,39 @@
         .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none; transition: border-color 0.3s; }
         .input-field:focus { border-color: var(--accent-color); }
         
+        /* 📈 新增：後台虛擬打字機重播區樣式 */
+        .admin-playback-box { 
+            display: none; 
+            background: rgba(15, 23, 42, 0.9); 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 212, 59, 0.3); 
+            margin-top: 20px; 
+            box-shadow: 0 0 20px rgba(255, 212, 59, 0.1);
+        }
+        .playback-monitor {
+            font-size: 24px;
+            background: #050b14;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 70px;
+            margin: 15px 0;
+            color: #4ade80;
+            border-left: 4px solid #38bdf8;
+            letter-spacing: 1px;
+        }
+        .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); }
+        .playback-dash span b { color: #fff; font-size: 18px; }
+
         /* 圖表與後台列表 */
         .chart-container { width: 100%; height: 120px; margin-top: 30px; }
-        .admin-chart-container { width: 100%; height: 250px; margin-top: 20px; display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
         th, td { padding: 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { color: var(--text-muted); font-weight: normal; }
         tbody tr { cursor: pointer; transition: background 0.2s; }
         tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* ✨ 核心：全螢幕磨砂玻璃覆蓋層 (CORS / 密碼 / 通關通用) */
+        /* ✨ 全螢幕磨砂玻璃覆蓋層 (CORS / 密碼 / 通關通用) */
         .glass-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -126,7 +149,6 @@
         }
         .glass-overlay.active { opacity: 1; pointer-events: auto; }
         
-        /* 玻璃面板字卡 */
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(25px);
@@ -143,7 +165,6 @@
         }
         .glass-overlay.active .glass-card { transform: scale(1); }
         
-        /* 密碼卡片專屬發光霓虹邊框 */
         .password-style { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15); }
         .password-style .glass-title { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
         
@@ -211,14 +232,18 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>班級 Python 3 關挑戰紀錄後台</h2>
+        <h2>Python 3 關挑戰紀錄後台</h2>
         <div style="text-align: center;">
             <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px;">重新整理數據</button>
         </div>
         
-        <div class="admin-chart-container" id="adminChartBox">
-            <h4 id="chartTitle" style="text-align:center; margin-bottom:10px; color:var(--accent-color);">點擊下方學生欄位播放演示圖</h4>
-            <canvas id="adminPlaybackChart"></canvas>
+        <div class="admin-playback-box" id="playbackVisualBox">
+            <h4 id="playbackTitle" style="text-align:center; color:var(--accent-color); font-family:sans-serif;">點擊下方學生欄位播放演示圖</h4>
+            <div class="playback-monitor" id="playbackTextScreen"></div>
+            <div class="playback-dash">
+                <span>目前模擬時間: <b id="playbackTimer">0</b> 秒</span>
+                <span>當前即時速度: <b id="playbackWpm" style="color:#ffd43b;">0</b> WPM</span>
+            </div>
         </div>
 
         <table>
@@ -237,10 +262,9 @@
 </div>
 
 <script>
-    // ⚠️ 請更換成您重新部署後的正確 Apps Script 網址
+    // ⚠️ 請更換成您最新的後端網址
     const API_URL = "https://script.google.com/macros/s/AKfycbwxYhBXK_cnP5TsGGC_W_A22vULI1B85Mf-0jGLdwVO9mS8i46rT_rZzhDMYh4exYqr/exec"; 
 
-    // 3關專屬 Python 題目庫
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
@@ -250,7 +274,7 @@
     let currentLevel = 0; let currentSeatNumber = ""; let targetSentence = "";
     let startTime = null; let timerInterval = null; let isTestActive = false;
     let speedHistory = []; let secondsElapsed = 0;
-    let liveChart = null; let playbackChart = null; let playbackInterval = null;
+    let liveChart = null; let playbackTimeout = null;
     let globalAdminData = []; let glassCallback = null;
 
     // 初始化 1-29 座號
@@ -261,7 +285,6 @@
         seatSelect.appendChild(opt);
     }
 
-    // 控制系統訊息磨砂面板
     function openGlassAlert(title, message, callback = null) {
         document.getElementById('glassTitle').textContent = title;
         document.getElementById('glassMsg').textContent = message;
@@ -273,7 +296,6 @@
         if (glassCallback) { glassCallback(); glassCallback = null; }
     }
 
-    // 控制密碼輸入磨砂面板
     function openPasswordPanel() {
         const btn = document.getElementById('toggleModeBtn');
         if (btn.textContent === "切換至後台") {
@@ -290,11 +312,9 @@
         document.getElementById('glassPasswordOverlay').classList.remove('active');
     }
 
-    // 🚀 已優化：使用簡單請求模式發送，徹底避開 Preflight CORS 檢查
     function submitAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value;
         if (!pass) return;
-
         closePasswordPanel();
 
         fetch(API_URL, {
@@ -442,7 +462,6 @@
         });
     }
 
-    // 🚀 已優化：移除自訂標頭，走安全簡單請求
     function submitScore(seat, wpm, history) {
         fetch(API_URL, {
             method: "POST",
@@ -456,19 +475,16 @@
     function resetTestSystem() {
         clearInterval(timerInterval);
         if(liveChart) liveChart.destroy();
+        clearTimeout(playbackTimeout);
     }
 
     // ================= 後台數據連線 =================
 
-    // 🚀 已優化：使用簡單 GET 模式穿透 Google 轉址阻擋
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
         tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
 
-        fetch(API_URL, {
-            method: "GET",
-            mode: "cors"
-        })
+        fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
         .then(data => {
             globalAdminData = data; 
@@ -495,32 +511,62 @@
         });
     }
 
+    // ⚡ 核心演算法：根據歷史 WPM「動態還原當時打字速度」的重播器！
     function playStudentDemo(index) {
-        clearInterval(playbackInterval);
-        document.getElementById('adminChartBox').style.display = "block";
+        clearTimeout(playbackTimeout); // 清除上一次正在播放的模擬
+        
         const student = globalAdminData[index];
-        document.getElementById('chartTitle').textContent = `${student.number} 號同學 速度脈絡重建模擬 (最終成績：${student.wpm} WPM)`;
         const historyData = student.history || [0];
         
-        if(playbackChart) playbackChart.destroy();
-        const ctx = document.getElementById('adminPlaybackChart').getContext('2d');
-        playbackChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [0], datasets: [{ label: '即時 WPM', data: [0], borderColor: '#ffd43b', backgroundColor: 'rgba(255, 212, 59, 0.05)', fill: true, tension: 0.2 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 120 } } }
-        });
+        // 依照 WPM 成績比對，自動猜測該學生當時打的是哪一關的文字（一、二、三關）
+        let mockFullText = sentences[0]; 
+        if (student.wpm > 35 && student.wpm <= 60) mockFullText = sentences[1];
+        if (student.wpm > 60) mockFullText = sentences[2];
 
-        let currentTick = 1;
-        playbackInterval = setInterval(() => {
-            if (currentTick < historyData.length) {
-                playbackChart.data.labels.push(currentTick + "秒");
-                playbackChart.data.datasets[0].data.push(historyData[currentTick]);
-                playbackChart.update();
-                currentTick++;
-            } else {
-                clearInterval(playbackInterval);
+        // 顯示模擬面板
+        document.getElementById('playbackVisualBox').style.display = "block";
+        document.getElementById('playbackTitle').textContent = `🎬正在重播： ${student.number} 號同學的打字脈絡現場`;
+
+        let currentCharIndex = 0;
+        let currentSecond = 0;
+        
+        // 清空虛擬螢幕
+        const textScreen = document.getElementById('playbackTextScreen');
+        textScreen.textContent = "";
+
+        // 遞迴打字模擬核心
+        function runSimulation() {
+            if (currentSecond >= historyData.length && currentCharIndex >= mockFullText.length) {
+                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${student.number} 號同學 模擬完畢`;
+                return;
             }
-        }, 300); 
+
+            // 抓取當前那一秒鐘的 WPM 速度
+            let currentWpm = historyData[currentSecond] || 0;
+            if (currentSecond < historyData.length) {
+                document.getElementById('playbackTimer').textContent = currentSecond;
+                document.getElementById('playbackWpm').textContent = currentWpm;
+                currentSecond++;
+            }
+
+            // 計算接下來這一秒鐘，應該要吐出多少個字？
+            // 公式：WPM * 5 = 每分鐘打多少字。再除以 60 = 每秒打多少字。
+            let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
+            if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1; // 只要有速度就至少跳一格
+
+            // 把字吐到畫面上
+            for (let i = 0; i < charsToTypeThisSecond; i++) {
+                if (currentCharIndex < mockFullText.length) {
+                    textScreen.textContent += mockFullText[currentCharIndex];
+                    currentCharIndex++;
+                }
+            }
+
+            // 每隔 1 秒（1000毫秒）推進歷史時間軸，動態演出速度
+            playbackTimeout = setTimeout(runSimulation, 1000);
+        }
+
+        runSimulation(); // 開始動態模擬
     }
 </script>
 </body>
