@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python 程式碼多關卡打字測試系統</title>
+    <title>Python 程式碼 3 關打字測試系統</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -14,7 +14,7 @@
             --text-muted: #64748b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
-        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden;}
         .container { background: var(--card-bg); padding: 40px; border-radius: 12px; width: 100%; max-width: 850px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; }
         .nav-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: sans-serif; }
         .nav-btn:hover { background: var(--accent-color); color: #000; }
@@ -67,23 +67,99 @@
         th { color: var(--text-muted); font-weight: normal; }
         tbody tr { cursor: pointer; }
         tbody tr:hover { background: rgba(255,255,255,0.05); }
+
+        /* ✨ 核心：玻璃流光面板樣式 (Glassmorphism) */
+        .glass-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); /* 暗色半透明底 */
+            backdrop-filter: blur(10px); /* 磨砂玻璃特效 */
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .glass-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 212, 59, 0.3); /* 黃色半透明邊框 */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 212, 59, 0.1);
+            padding: 35px 50px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            transform: scale(0.85);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .glass-overlay.active .glass-card {
+            transform: scale(1);
+        }
+        .glass-title {
+            font-size: 24px;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-family: sans-serif;
+            text-shadow: 0 0 10px rgba(255, 212, 59, 0.5);
+        }
+        .glass-msg {
+            font-size: 16px;
+            color: #e2e8f0;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-family: sans-serif;
+        }
+        .glass-btn {
+            background: linear-gradient(135deg, #ffd43b, #ffb800);
+            color: #000;
+            border: none;
+            padding: 10px 30px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 212, 59, 0.4);
+            transition: background 0.2s, transform 0.1s;
+            font-family: sans-serif;
+            display: inline-block;
+        }
+        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 212, 59, 0.6); }
+        .glass-btn:active { transform: translateY(0); }
     </style>
 </head>
 <body>
+
+<div class="glass-overlay" id="glassAlert">
+    <div class="glass-card">
+        <div class="glass-title" id="glassTitle">系統提示</div>
+        <div class="glass-msg" id="glassMsg">這是內容訊息。</div>
+        <button class="glass-btn" id="glassBtn" onclick="closeGlassAlert()">確認</button>
+    </div>
+</div>
 
 <div class="container">
     <button class="nav-btn" id="toggleModeBtn" onclick="handleNavClick()">切換至後台</button>
 
     <div id="loginPage" class="page active">
-        <h2>選擇座號 (1-29 號) 連續 Python 測試</h2>
+        <h2> Python 測試</h2>
         <div class="form-group">
             <select id="seatNumber"></select>
-            <button class="btn" onclick="startTest()">開始多關卡測試</button>
+            <button class="btn" onclick="startTest()">開始 3 關挑戰測試</button>
         </div>
     </div>
 
     <div id="testPage" class="page">
-        <div class="progress-box" id="progressDisplay">目前關卡: 1 / 7</div>
+        <div class="progress-box" id="progressDisplay">目前關卡: 1 / 3</div>
         <div class="dashboard">
             <div class="dash-item">本關 WPM<div class="dash-value" id="liveWpm">0</div></div>
             <div class="dash-item">精確度<div class="dash-value" id="liveAcc">100%</div></div>
@@ -98,7 +174,7 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>班級 Python 多關卡紀錄後台</h2>
+        <h2>班級 Python 3 關挑戰紀錄後台</h2>
         <div style="text-align: center;">
             <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px;">重新整理數據</button>
         </div>
@@ -124,21 +200,17 @@
 </div>
 
 <script>
-    // ⚠️ 務必在此處更換成您重新部署後的正確 Apps Script 網址
+    // ⚠️ 請更換成您正確的 Apps Script 網址
     const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
 
-    // 關卡庫：總共 7 關，完全小寫的 Python 程式碼
+    // 精確 3 關題目
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
-        "total = 0; total += 1; print(total)",
-        "items = [1, 2, 3]; items.append(4)",
-        "info = {'name': 'user', 'score': 100}",
-        "def main(): return 'success'",
-        "if x > 0: print('positive') else: print('negative')"
+        "items = [1, 2, 3]; items.append(4)"
     ];
 
-    let currentLevel = 0; // 從第 0 關 (第一句) 開始
+    let currentLevel = 0; 
     let currentSeatNumber = "";
     let targetSentence = "";
     let startTime = null;
@@ -152,13 +224,30 @@
     let playbackChart = null;
     let playbackInterval = null;
     let globalAdminData = [];
+    let glassCallback = null; // 紀錄玻璃面板按鈕按下去之後要執行的動作
 
-    // 初始化座號：1 到 29 號
+    // 初始化座號
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
         opt.value = i; opt.textContent = i + " 號";
         seatSelect.appendChild(opt);
+    }
+
+    // 呼叫玻璃面板提示框的函式
+    function openGlassAlert(title, message, callback = null) {
+        document.getElementById('glassTitle').textContent = title;
+        document.getElementById('glassMsg').textContent = message;
+        glassCallback = callback;
+        document.getElementById('glassAlert').classList.add('active');
+    }
+
+    function closeGlassAlert() {
+        document.getElementById('glassAlert').classList.remove('active');
+        if (glassCallback) {
+            glassCallback();
+            glassCallback = null;
+        }
     }
 
     function showPage(pageId) {
@@ -178,17 +267,20 @@
                 body: JSON.stringify({ action: "checkPassword", password: pass }),
                 headers: { "Content-Type": "text/plain" }
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.text()) 
+            .then(text => {
+                const data = JSON.parse(text);
                 if (data.status === "success") {
-                    btn.textContent = "返回測試";
-                    showPage('adminPage');
-                    fetchAdminData();
+                    openGlassAlert("驗證成功", "已成功登入管理後台！", function() {
+                        btn.textContent = "返回測試";
+                        showPage('adminPage');
+                        fetchAdminData();
+                    });
                 } else {
-                    alert("密碼錯誤！");
+                    openGlassAlert("驗證失敗", "密碼輸入錯誤，拒絕存取。");
                 }
             }).catch(() => {
-                alert("通訊失敗，請檢查後端是否已發布新版本。");
+                openGlassAlert("網路通訊失敗", "請確認後端 Google 應用程式是否發布成功。");
             });
         } else {
             btn.textContent = "切換至後台";
@@ -199,15 +291,13 @@
 
     function startTest() {
         currentSeatNumber = seatSelect.value;
-        currentLevel = 0; // 重設關卡
+        currentLevel = 0; 
         showPage('testPage');
         initLiveChart();
         loadLevel();
         
         const inputField = document.getElementById('typingInput');
-        
-        // 🚫 嚴格防複製、貼上
-        inputField.addEventListener('paste', function(e) { e.preventDefault(); alert("禁止貼上！"); });
+        inputField.addEventListener('paste', function(e) { e.preventDefault(); openGlassAlert("安全警告", "系統偵測到複製行為，此處禁止直接貼上程式碼！"); });
         inputField.addEventListener('copy', function(e) { e.preventDefault(); });
         inputField.addEventListener('drop', function(e) { e.preventDefault(); });
     }
@@ -265,24 +355,28 @@
             timerInterval = setInterval(updateStats, 1000);
         }
 
-        // 當前關卡打完
+        // 當前關卡順利打完
         if (inputVal === targetSentence) {
             clearInterval(timerInterval);
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime) || 0;
             
-            // 背景同步上傳成績
             submitScore(currentSeatNumber, finalWpm, speedHistory);
 
-            // 檢查是否還有下一關
             if (currentLevel < sentences.length - 1) {
                 currentLevel++;
-                setTimeout(loadLevel, 600); // 稍微延遲 0.6 秒後自動載入下一關
+                setTimeout(loadLevel, 600); 
             } else {
-                alert("太棒了！你已完成所有 Python 程式碼打字測試關卡！");
-                resetTestSystem();
-                showPage('loginPage');
+                // 3 關打完，跳出客製化玻璃葉面，按下確認後返回首頁
+                openGlassAlert(
+                    "🎉 挑戰成功！", 
+                    `恭喜完成全數 3 關 Python 程式碼測試！成績與速度已同步上傳至老師的試算表。`, 
+                    function() {
+                        resetTestSystem();
+                        showPage('loginPage');
+                    }
+                );
             }
         }
     }
@@ -327,7 +421,7 @@
             body: JSON.stringify({ number: seat, wpm: wpm, history: history }),
             headers: { "Content-Type": "text/plain" }
         })
-        .then(res => res.json())
+        .then(res => res.text())
         .catch(err => console.log("網路重試中..."));
     }
 
@@ -343,8 +437,9 @@
         tbody.innerHTML = `<tr><td colspan="3">正在即時讀取最新資料庫...</td></tr>`;
 
         fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
+        .then(res => res.text())
+        .then(text => {
+            const data = JSON.parse(text);
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
@@ -367,7 +462,7 @@
                 tbody.appendChild(tr);
             });
         }).catch(() => {
-            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認 Apps Script 已發布「新版本」並設定為「所有人」。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="color:#f87171;">讀取失敗。請確認後端設定是否正確。</td></tr>`;
         });
     }
 
