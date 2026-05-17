@@ -75,6 +75,7 @@
         
         button.btn { background: linear-gradient(135deg, #ffd43b, #ffa500); color: #000; border: none; padding: 14px 35px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; display: block; margin: 25px auto 0; font-family: sans-serif; box-shadow: 0 5px 15px rgba(255, 212, 59, 0.3); transition: all 0.3s; }
         button.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 212, 59, 0.5); }
+        button.btn:disabled { background: #334155; color: #64748b; box-shadow: none; cursor: not-allowed; transform: none; }
         
         /* 打字區域 */
         .word-display { 
@@ -99,7 +100,7 @@
         .input-field { width: 100%; max-width: 100%; background: transparent; border: none; border-bottom: 2px solid #334155; border-radius: 0; padding: 10px 0; font-size: 22px; text-align: left; color: #fff; outline: none; transition: border-color 0.3s; }
         .input-field:focus { border-color: var(--accent-color); }
         
-        /* 📈 新增：後台虛擬打字機重播區樣式 */
+        /* 📈 後台虛擬打字機重播區樣式 */
         .admin-playback-box { 
             display: none; 
             background: rgba(15, 23, 42, 0.9); 
@@ -119,7 +120,23 @@
             color: #4ade80;
             border-left: 4px solid #38bdf8;
             letter-spacing: 1px;
+            white-space: pre-wrap;
         }
+        /* 動態虛擬光標 */
+        .playback-cursor {
+            display: inline-block;
+            width: 10px;
+            background-color: #38bdf8;
+            animation: blink 0.8s infinite;
+            margin-left: 2px;
+        }
+        .playback-cursor.stopped { animation: none; background-color: transparent; }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
         .playback-dash { display: flex; justify-content: space-around; font-family: sans-serif; font-size: 14px; color: var(--text-muted); }
         .playback-dash span b { color: #fff; font-size: 18px; }
 
@@ -131,7 +148,7 @@
         tbody tr { cursor: pointer; transition: background 0.2s; }
         tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* ✨ 全螢幕磨砂玻璃覆蓋層 (CORS / 密碼 / 通關通用) */
+        /* ✨ 全螢幕磨砂玻璃覆蓋層 */
         .glass-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -212,7 +229,7 @@
         <h2>選擇座號 (1-29 號) 連續 Python 測試</h2>
         <div class="form-group">
             <select id="seatNumber"></select>
-            <button class="btn" onclick="startTest()">開始 3 關挑戰測試</button>
+            <button class="btn" id="startBtn" onclick="startTest()">開始 3 關挑戰測試</button>
         </div>
     </div>
 
@@ -232,14 +249,16 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>Python 3 關挑戰紀錄後台</h2>
+        <h2>班級 Python 3 關挑戰紀錄後台</h2>
         <div style="text-align: center;">
             <button class="btn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px;">重新整理數據</button>
         </div>
         
         <div class="admin-playback-box" id="playbackVisualBox">
             <h4 id="playbackTitle" style="text-align:center; color:var(--accent-color); font-family:sans-serif;">點擊下方學生欄位播放演示圖</h4>
-            <div class="playback-monitor" id="playbackTextScreen"></div>
+            <div class="playback-monitor">
+                <span id="playbackTextScreen"></span><span id="virtualCursor" class="playback-cursor">&nbsp;</span>
+            </div>
             <div class="playback-dash">
                 <span>目前模擬時間: <b id="playbackTimer">0</b> 秒</span>
                 <span>當前即時速度: <b id="playbackWpm" style="color:#ffd43b;">0</b> WPM</span>
@@ -262,8 +281,7 @@
 </div>
 
 <script>
-    // ⚠️ 請更換成您最新的後端網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbwxYhBXK_cnP5TsGGC_W_A22vULI1B85Mf-0jGLdwVO9mS8i46rT_rZzhDMYh4exYqr/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbwGom8efOzehsCcZFbu-UBcmX2t0TWxKUzkaTlXG-5lSOz7MvgP01SynsMKg5DLL95x/exec"; 
 
     const sentences = [
         "print('hello python')",
@@ -274,7 +292,8 @@
     let currentLevel = 0; let currentSeatNumber = ""; let targetSentence = "";
     let startTime = null; let timerInterval = null; let isTestActive = false;
     let speedHistory = []; let secondsElapsed = 0;
-    let liveChart = null; let playbackTimeout = null;
+    let liveChart = null; 
+    let playbackIntervalId = null; 
     let globalAdminData = []; let glassCallback = null;
 
     // 初始化 1-29 座號
@@ -344,13 +363,45 @@
         document.getElementById(pageId).classList.add('active');
     }
 
+    // 🔒 核心升級：開始測試前，先線上向資料庫確認有無該座號紀錄
     function startTest() {
-        currentSeatNumber = seatSelect.value;
-        currentLevel = 0; 
-        showPage('testPage');
-        initLiveChart();
-        loadLevel();
+        const selectedSeat = seatSelect.value;
+        const startBtn = document.getElementById('startBtn');
         
+        startBtn.disabled = true;
+        startBtn.textContent = "正在線上核對座號身分...";
+
+        fetch(`${API_URL}?checkSeat=${selectedSeat}`, {
+            method: "GET",
+            mode: "cors"
+        })
+        .then(res => res.json())
+        .then(data => {
+            startBtn.disabled = false;
+            startBtn.textContent = "開始 3 關挑戰測試";
+            
+            if (data.duplicate) {
+                // 如果已經做過，跳出阻擋警告
+                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已經完成過本次 Python 測試囉！每人限定挑戰一次。如需重新測試，請聯繫老師清除紀錄。`);
+            } else {
+                // 通過檢查，放行進入測試
+                currentSeatNumber = selectedSeat;
+                currentLevel = 0; 
+                showPage('testPage');
+                initLiveChart();
+                loadLevel();
+                setupSecurityRestrictions();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            startBtn.disabled = false;
+            startBtn.textContent = "開始 3 關挑戰測試";
+            openGlassAlert("系統安全異常", "無法連接至雲端資料庫檢查重複性，請檢查網路，或確認後端已正確部署。");
+        });
+    }
+
+    function setupSecurityRestrictions() {
         const inputField = document.getElementById('typingInput');
         inputField.addEventListener('paste', function(e) { e.preventDefault(); openGlassAlert("操作受限", "為確保練習成效，系統禁止在此處直接貼上程式碼！"); });
         inputField.addEventListener('copy', function(e) { e.preventDefault(); });
@@ -418,7 +469,7 @@
             } else {
                 openGlassAlert(
                     "🎉 全數挑戰成功！", 
-                    `恭喜「使用者」完成 3 關 Python 脈絡打字測試！所有即時數據已成功封包並上傳後台試算表。`, 
+                    `恭喜完成 3 關 Python 脈絡打字測試！所有即時數據已成功封包並上傳後台試算表。`, 
                     function() {
                         resetTestSystem();
                         showPage('loginPage');
@@ -475,7 +526,7 @@
     function resetTestSystem() {
         clearInterval(timerInterval);
         if(liveChart) liveChart.destroy();
-        clearTimeout(playbackTimeout);
+        clearInterval(playbackIntervalId);
     }
 
     // ================= 後台數據連線 =================
@@ -511,62 +562,56 @@
         });
     }
 
-    // ⚡ 核心演算法：根據歷史 WPM「動態還原當時打字速度」的重播器！
     function playStudentDemo(index) {
-        clearTimeout(playbackTimeout); // 清除上一次正在播放的模擬
+        clearInterval(playbackIntervalId); 
         
         const student = globalAdminData[index];
         const historyData = student.history || [0];
         
-        // 依照 WPM 成績比對，自動猜測該學生當時打的是哪一關的文字（一、二、三關）
         let mockFullText = sentences[0]; 
         if (student.wpm > 35 && student.wpm <= 60) mockFullText = sentences[1];
         if (student.wpm > 60) mockFullText = sentences[2];
 
-        // 顯示模擬面板
         document.getElementById('playbackVisualBox').style.display = "block";
-        document.getElementById('playbackTitle').textContent = `🎬正在重播： ${student.number} 號同學的打字脈絡現場`;
+        document.getElementById('playbackTitle').textContent = `🎬 正在重播： ${student.number} 號同學的打字脈絡現場`;
+        
+        const textScreen = document.getElementById('playbackTextScreen');
+        const cursor = document.getElementById('virtualCursor');
+        textScreen.textContent = "";
+        cursor.classList.remove('stopped'); 
 
         let currentCharIndex = 0;
         let currentSecond = 0;
-        
-        // 清空虛擬螢幕
-        const textScreen = document.getElementById('playbackTextScreen');
-        textScreen.textContent = "";
+        let queue = []; 
 
-        // 遞迴打字模擬核心
-        function runSimulation() {
-            if (currentSecond >= historyData.length && currentCharIndex >= mockFullText.length) {
-                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${student.number} 號同學 模擬完畢`;
-                return;
-            }
-
-            // 抓取當前那一秒鐘的 WPM 速度
-            let currentWpm = historyData[currentSecond] || 0;
-            if (currentSecond < historyData.length) {
+        playbackIntervalId = setInterval(() => {
+            if (queue.length === 0 && currentSecond < historyData.length) {
+                let currentWpm = historyData[currentSecond] || 0;
                 document.getElementById('playbackTimer').textContent = currentSecond;
                 document.getElementById('playbackWpm').textContent = currentWpm;
+
+                let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
+                if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
+
+                for (let i = 0; i < charsToTypeThisSecond; i++) {
+                    if (currentCharIndex < mockFullText.length) {
+                        queue.push(mockFullText[currentCharIndex]);
+                        currentCharIndex++;
+                    }
+                }
                 currentSecond++;
             }
 
-            // 計算接下來這一秒鐘，應該要吐出多少個字？
-            // 公式：WPM * 5 = 每分鐘打多少字。再除以 60 = 每秒打多少字。
-            let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
-            if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1; // 只要有速度就至少跳一格
-
-            // 把字吐到畫面上
-            for (let i = 0; i < charsToTypeThisSecond; i++) {
-                if (currentCharIndex < mockFullText.length) {
-                    textScreen.textContent += mockFullText[currentCharIndex];
-                    currentCharIndex++;
-                }
+            if (queue.length > 0) {
+                textScreen.textContent += queue.shift();
             }
 
-            // 每隔 1 秒（1000毫秒）推進歷史時間軸，動態演出速度
-            playbackTimeout = setTimeout(runSimulation, 1000);
-        }
-
-        runSimulation(); // 開始動態模擬
+            if (currentSecond >= historyData.length && queue.length === 0 && currentCharIndex >= mockFullText.length) {
+                clearInterval(playbackIntervalId);
+                document.getElementById('playbackTitle').textContent = `✅ 重播結束： ${student.number} 號同學 模擬完畢`;
+                cursor.classList.add('stopped'); 
+            }
+        }, 50); 
     }
 </script>
 </body>
