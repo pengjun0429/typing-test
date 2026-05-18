@@ -85,7 +85,7 @@
         }
         [data-theme="dark"] .container { box-shadow: 0 25px 80px rgba(0,0,0,0.3); }
 
-        /* 🎯 右上角後台導覽按鈕 - 修正定位與層級 */
+        /* 右上角後台導覽按鈕 */
         .nav-btn { 
             position: absolute; 
             top: 25px; 
@@ -110,7 +110,7 @@
             transform: translateY(-2px);
         }
         
-        /* 🎯 右上角主題切換按鈕 - 修正定位與層級 */
+        /* 右上角主題切換按鈕 */
         .theme-btn {
             position: absolute;
             top: 25px;
@@ -163,7 +163,7 @@
         select:focus, input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.02); }
         select option { color: #000; background: #fff; }
 
-        /* 🎯 開始測試按鈕：完美水平居中 */
+        /* 🎯 開始測試按鈕 */
         .btn-center {
             background: linear-gradient(135deg, var(--accent-color), #f97316); 
             color: #fff; 
@@ -196,9 +196,8 @@
         .dash-item { font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;}
         .dash-value { font-size: 42px; color: var(--text-color); font-weight: 800; text-shadow: 0 0 15px rgba(128,128,128,0.1); }
         
-        /* 關卡顯示區與特別標籤 */
-        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 0 10px var(--accent-glow); }
-        .author-tag { text-align: center; font-size: 13px; color: var(--info-color); font-weight: 600; margin-bottom: 20px; display: none; letter-spacing: 0.5px; }
+        /* 關卡顯示區 */
+        .progress-box { text-align: center; color: var(--accent-color); font-size: 18px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-glow); }
 
         /* 代碼顯示區 */
         .word-display { 
@@ -219,7 +218,6 @@
             position: relative;
             font-family: 'Fira Code', 'Courier New', monospace;
         }
-        .word-display.boss-level { border-left-color: var(--error-color); box-shadow: 0 0 20px rgba(248, 113, 113, 0.1); }
 
         .word-display span.correct { color: var(--success-color); text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); } 
         [data-theme="light"] .word-display span.correct { color: #16a34a; text-shadow: none; }
@@ -290,7 +288,7 @@
 
         .chart-container { width: 100%; height: 140px; margin-top: 35px; border-top: 1px solid var(--input-border); padding-top: 15px; }
         
-        /* 🎯 彈窗覆蓋層 - 確保 fixed 鋪滿全螢幕且居中 */
+        /* 彈窗覆蓋層 */
         .glass-overlay {
             position: fixed; 
             top: 0; 
@@ -310,7 +308,6 @@
         }
         .glass-overlay.active { opacity: 1; pointer-events: auto; }
         
-        /* 🎯 彈窗本體 - 保持置中與比例 */
         .glass-card {
             background: var(--glass-card-bg); 
             backdrop-filter: blur(25px); 
@@ -320,18 +317,18 @@
             padding: 35px 40px; 
             border-radius: 20px; 
             width: 90%; 
-            max-width: 450px; 
+            max-width: 500px; 
             text-align: center;
             transform: scale(0.9); 
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin: auto; /* 強制於 flex 容器中置中 */
+            margin: auto;
         }
         .glass-overlay.active .glass-card { transform: scale(1); }
         
         .password-style { border-color: var(--info-color); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px var(--info-glow); }
         .password-style .glass-title { color: var(--info-color); text-shadow: 0 0 10px var(--info-glow); }
         
-        .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; }
+        .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; font-weight: 700; }
         .glass-msg { font-size: 15px; color: var(--glass-card-msg); line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
         
         .glass-btn {
@@ -348,6 +345,11 @@
         th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;}
         tbody tr { cursor: pointer; transition: background 0.3s; }
         tbody tr:hover { background: var(--table-hover); }
+
+        /* 🏅 成績單專用微調樣式 */
+        .score-box-summary { background: rgba(15, 23, 42, 0.2); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--card-border); text-align: left; font-family: sans-serif;}
+        .score-row-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;}
+        .score-row-item:last-child { margin-bottom: 0; border-top: 1px solid var(--card-border); padding-top: 8px; font-weight: bold;}
     </style>
 </head>
 <body data-theme="dark">
@@ -359,6 +361,20 @@
         <div class="glass-title" id="glassTitle">系統提示</div>
         <div class="glass-msg" id="glassMsg">說明載入中...</div>
         <button class="glass-btn" onclick="closeGlassAlert()">確認</button>
+    </div>
+</div>
+
+<div class="glass-overlay" id="glassResultReport">
+    <div class="glass-card" style="border-color: var(--success-color); box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+        <div class="glass-title" style="color: var(--success-color);">🏆 挑戰測試完成！</div>
+        <div class="glass-msg" id="resultReportMeta">座號：-- 號</div>
+        <div class="score-box-summary" id="resultReportDetail">
+            </div>
+        <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <button class="glass-btn" id="mockFullClassBtn" onclick="simulateFullClassCompletion()" style="background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 15px rgba(168,85,247,0.4); display: none;">🧪 模擬全班完賽 (測試專用)</button>
+            <button class="glass-btn" onclick="checkClassLeaderboard()" style="background: linear-gradient(135deg, var(--info-color), #0284c7); box-shadow: 0 4px 15px var(--info-glow);">🏆 查看班級排行榜</button>
+            <button class="glass-btn btn-secondary" onclick="closeResultReport()">返回首頁</button>
+        </div>
     </div>
 </div>
 
@@ -385,12 +401,11 @@
             <p style="color: var(--text-muted); margin-bottom: 15px; font-family: sans-serif;">請選擇您的座號開始挑戰：</p>
             <select id="seatNumber"></select>
         </div>
-        <button class="btn-center" id="startBtn" onclick="startTest()">開始 4 關連續測試</button>
+        <button class="btn-center" id="startBtn" onclick="startTest()">開始 3 關連續測試</button>
     </div>
 
     <div id="testPage" class="page">
-        <div class="progress-box" id="progressDisplay">目前關卡: 1 / 4</div>
-        <div class="author-tag" id="authorTag">👹 魔王關 (由 辛承霖 提供)</div>
+        <div class="progress-box" id="progressDisplay">目前關卡: 1 / 3</div>
         
         <div class="dashboard">
             <div class="dash-card">
@@ -415,9 +430,9 @@
     </div>
 
     <div id="adminPage" class="page">
-        <h2>📊 班級挑戰紀錄後台</h2>
+        <h2 id="adminPageTitle">📊 班級挑戰紀錄後台</h2>
         <div style="text-align: center; margin-bottom: 30px;">
-            <button class="btn-center" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px; padding: 12px 25px; font-size: 14px;">🔄 重新整理數據</button>
+            <button class="btn-center" id="refreshAdminDataBtn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px; padding: 12px 25px; font-size: 14px;">🔄 重新整理數據</button>
         </div>
         
         <div class="admin-playback-box" id="playbackVisualBox">
@@ -441,7 +456,7 @@
         </div>
 
         <table>
-            <thead>
+            <thead id="adminTableHeader">
                 <tr>
                     <th>最新測試時間</th>
                     <th>座號</th>
@@ -457,14 +472,12 @@
 </div>
 
 <script>
-    // ⚠️ 請置換成您的 Apps Script API 部署網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
 
     const sentences = [
         "print('hello python')",
         "for i in range(10): print(i)",
-        "items = [1, 2, 3]; items.append(4)",
-        'pattern = re.compile(r"\\s*(s|\\d+(\\.\\d+)?)\\s*([\\+\\-\\/])\\s(s|\\d+(\\.\\d+)?)")'
+        "items = [1, 2, 3]; items.append(4)"
     ];
 
     let currentLevel = 0; let currentSeatNumber = ""; let targetSentence = "";
@@ -474,6 +487,11 @@
     let playbackIntervalId = null; 
     let globalAdminData = []; let glassCallback = null;
     let currentSelectedSeatRecords = [];
+
+    let studentSessionScores = []; 
+    let isTestMode = false; 
+    let isMockingFullClass = false; // 🧪 是否啟動了全班完賽模擬假數據
+    let mockClassDataCache = {};    // 儲存產生的隨機班級記憶體數據
 
     // ✨ 主題切換
     function toggleTheme() {
@@ -502,13 +520,17 @@
         liveChart.update('none');
     }
 
-    // 初始化 1-29 座號
+    // 初始化 1-29 座號 + 🧪 測試模式選項
     const seatSelect = document.getElementById('seatNumber');
     for(let i = 1; i <= 29; i++) {
         let opt = document.createElement('option');
         opt.value = i; opt.textContent = i + " 號";
         seatSelect.appendChild(opt);
     }
+    let testOpt = document.createElement('option');
+    testOpt.value = "TEST_MODE";
+    testOpt.textContent = "🧪 測試模式 (不計入資料庫)";
+    seatSelect.appendChild(testOpt);
 
     function openGlassAlert(title, message, callback = null) {
         document.getElementById('glassTitle').textContent = title;
@@ -521,9 +543,172 @@
         if (glassCallback) { glassCallback(); glassCallback = null; }
     }
 
+    // 🏅 顯示挑戰報告
+    function openResultReport() {
+        document.getElementById('resultReportMeta').textContent = isTestMode ? "身分：🧪 測試體驗模式" : `座號：${currentSeatNumber} 號`;
+        
+        // 🧪 如果是測試模式，就把模擬完賽的紫色按鈕展示出來
+        document.getElementById('mockFullClassBtn').style.display = isTestMode ? "inline-block" : "none";
+        
+        const detailBox = document.getElementById('resultReportDetail');
+        detailBox.innerHTML = "";
+        
+        let totalWpm = 0;
+        studentSessionScores.forEach((item, idx) => {
+            totalWpm += item.wpm;
+            detailBox.innerHTML += `
+                <div class="score-row-item">
+                    <span>關卡 ${idx + 1}</span>
+                    <span>速度: <b style="color:var(--accent-color);">${item.wpm}</b> WPM | 精確度: <b style="color:var(--success-color);">${item.acc}%</b></span>
+                </div>
+            `;
+        });
+        
+        let avgWpm = Math.round(totalWpm / studentSessionScores.length) || 0;
+        detailBox.innerHTML += `
+            <div class="score-row-item">
+                <span>總體平均速度</span>
+                <span style="color: var(--accent-color); font-size: 16px;">${avgWpm} WPM</span>
+            </div>
+        `;
+        document.getElementById('glassResultReport').classList.add('active');
+    }
+    
+    function closeResultReport() {
+        document.getElementById('glassResultReport').classList.remove('active');
+        resetTestSystem();
+        showPage('loginPage');
+    }
+
+    // 🧪 核心新增：模擬全班 29 人全數打完的記憶體資料
+    function simulateFullClassCompletion() {
+        isMockingFullClass = true;
+        mockClassDataCache = {};
+
+        // 隨機生成 1 到 29 號的虛擬打字數據
+        for (let i = 1; i <= 29; i++) {
+            let mockWpm1 = Math.floor(Math.random() * (90 - 30 + 1)) + 30; // 30 ~ 90 隨機速度
+            let mockWpm2 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
+            let mockWpm3 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
+            
+            mockClassDataCache[i] = [
+                { number: i, wpm: mockWpm1 },
+                { number: i, wpm: mockWpm2 },
+                { number: i, wpm: mockWpm3 }
+            ];
+        }
+
+        // 把當前測試模式下，使用者打出來的真實速度覆蓋進去（假設當作 1 號或單純疊加）
+        let totalUserWpm = 0;
+        studentSessionScores.forEach(item => totalUserWpm += item.wpm);
+        let userAvgWpm = Math.round(totalUserWpm / studentSessionScores.length) || 50;
+
+        // 將虛擬的 29 號替換成當前測試者的實測數據，增強帶入感！
+        mockClassDataCache[29] = [
+            { number: "29 (你)", wpm: userAvgWpm },
+            { number: "29 (你)", wpm: userAvgWpm },
+            { number: "29 (你)", wpm: userAvgWpm }
+        ];
+
+        openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班 1~29 號不重複完賽假數據！點擊下方『查看班級排行榜』即可當場解鎖排行畫面！");
+    }
+
+    // 🏆 排行榜檢查邏輯
+    function checkClassLeaderboard() {
+        document.getElementById('glassResultReport').classList.remove('active');
+        
+        // 🧪 如果已經點了模擬完賽，直接走本地模擬渲染，完全不撈遠端資料庫
+        if (isTestMode && isMockingFullClass) {
+            document.getElementById('toggleModeBtn').textContent = "返回首頁";
+            document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜 (🧪 測試模擬環境)";
+            document.getElementById('refreshAdminDataBtn').style.display = "none"; 
+            document.getElementById('playbackVisualBox').style.display = "none";
+            showPage('adminPage');
+            renderLeaderboardView(mockClassDataCache);
+            return;
+        }
+
+        openGlassAlert("📡 正在讀取班級進度...", "請稍候，正在向資料庫驗證全班賽事狀態...");
+        
+        fetch(API_URL, { method: "GET", mode: "cors" })
+        .then(res => res.json())
+        .then(data => {
+            closeGlassAlert();
+            
+            let studentMap = {};
+            data.forEach(row => {
+                let seat = parseInt(row.number);
+                if(seat >= 1 && seat <= 29) {
+                    if(!studentMap[seat]) studentMap[seat] = [];
+                    studentMap[seat].push(row);
+                }
+            });
+            
+            let finishedCount = Object.keys(studentMap).length;
+            
+            if (finishedCount >= 29) {
+                openGlassAlert("🎉 排行榜已解鎖！", "全班 29 位同學均已挑戰完畢！即刻載入榮譽榜單！", function() {
+                    document.getElementById('toggleModeBtn').textContent = "返回首頁";
+                    document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜";
+                    document.getElementById('refreshAdminDataBtn').style.display = "none"; 
+                    document.getElementById('playbackVisualBox').style.display = "none";
+                    showPage('adminPage');
+                    renderLeaderboardView(studentMap);
+                });
+            } else {
+                openGlassAlert("🔒 尚未全面完賽", `目前全班完賽進度為 [ ${finishedCount} / 29 ]。需要等所有座號的同學都完成挑戰後，才能查看全班最終排行榜喔！\n\n💡 提示：若想預覽排行榜，可重新使用「🧪 測試模式」並在完賽時點擊紫色模擬按鈕解鎖！`);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            openGlassAlert("⚠️ 連線失敗", "無法從雲端讀取排行狀態。");
+        });
+    }
+
+    // 渲染純排行版畫面
+    function renderLeaderboardView(studentMap) {
+        const tbody = document.getElementById('adminTableBody');
+        tbody.innerHTML = "";
+        
+        let sortedList = Object.values(studentMap).map(student => {
+            let sumWpm = 0;
+            student.forEach(r => sumWpm += r.wpm);
+            let avgWpm = Math.round(sumWpm / student.length);
+            return { seat: student[0].number, avgWpm: avgWpm };
+        }).sort((a, b) => b.avgWpm - a.avgWpm); 
+        
+        document.getElementById('adminTableHeader').innerHTML = `
+            <tr>
+                <th>名次</th>
+                <th>座號</th>
+                <th>全關卡平均速度</th>
+                <th>競速狀態</th>
+            </tr>
+        `;
+        
+        sortedList.forEach((item, index) => {
+            let medal = index === 0 ? "🥇 冠軍" : index === 1 ? "🥈 亞軍" : index === 2 ? "🥉 季軍" : `第 ${index + 1} 名`;
+            let tr = document.createElement('tr');
+            tr.style.cursor = "default"; 
+            tr.innerHTML = `
+                <td><b>${medal}</b></td>
+                <td><b>${item.seat} 號</b></td>
+                <td style="color: var(--accent-color); font-weight:700; font-size:16px;">${item.avgWpm} WPM</td>
+                <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">挑戰成功</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     function openPasswordPanel() {
         const btn = document.getElementById('toggleModeBtn');
-        if (btn.textContent === "切換至後台") {
+        if (btn.textContent === "切換至後台" || btn.textContent === "返回首頁") {
+            if(btn.textContent === "返回首頁") {
+                btn.textContent = "切換至後台";
+                resetTestSystem();
+                showPage('loginPage');
+                return;
+            }
             document.getElementById('adminPasswordInput').value = "";
             document.getElementById('glassPasswordOverlay').classList.add('active');
             setTimeout(() => document.getElementById('adminPasswordInput').focus(), 200);
@@ -551,6 +736,16 @@
             if (data.status === "success") {
                 openGlassAlert("✅ 驗證成功", "身份核對正確，正在載入班級數據...", function() {
                     document.getElementById('toggleModeBtn').textContent = "返回測試";
+                    document.getElementById('adminPageTitle').textContent = "📊 班級挑戰紀錄後台";
+                    document.getElementById('refreshAdminDataBtn').style.display = "inline-block";
+                    document.getElementById('adminTableHeader').innerHTML = `
+                        <tr>
+                            <th>最新測試時間</th>
+                            <th>座號</th>
+                            <th>平均 WPM</th>
+                            <th>完成進度</th>
+                        </tr>
+                    `;
                     showPage('adminPage');
                     fetchAdminData();
                 });
@@ -572,6 +767,21 @@
         const selectedSeat = seatSelect.value;
         const startBtn = document.getElementById('startBtn');
         
+        studentSessionScores = []; 
+        isMockingFullClass = false; // 重置模擬開關
+
+        if(selectedSeat === "TEST_MODE") {
+            isTestMode = true;
+            currentSeatNumber = "TEST";
+            currentLevel = 0;
+            showPage('testPage');
+            initLiveChart();
+            loadLevel();
+            setupSecurityRestrictions();
+            return;
+        }
+
+        isTestMode = false;
         startBtn.disabled = true;
         startBtn.textContent = "正在核對...";
 
@@ -579,7 +789,7 @@
         .then(res => res.json())
         .then(data => {
             startBtn.disabled = false;
-            startBtn.textContent = "開始 4 關連續測試";
+            startBtn.textContent = "開始 3 關連續測試";
             
             if (data.duplicate) {
                 openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已經完成過本次 Python 測試囉！`);
@@ -595,7 +805,7 @@
         .catch(err => {
             console.error(err);
             startBtn.disabled = false;
-            startBtn.textContent = "開始 4 關連續測試";
+            startBtn.textContent = "開始 3 關連續測試";
             openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號驗證。");
         });
     }
@@ -610,16 +820,6 @@
     function loadLevel() {
         document.getElementById('progressDisplay').textContent = `關卡: ${currentLevel + 1} / ${sentences.length}`;
         
-        const authorTag = document.getElementById('authorTag');
-        const displayBox = document.getElementById('sentenceDisplay');
-        if (currentLevel === 3) {
-            authorTag.style.display = "block";
-            displayBox.classList.add('boss-level');
-        } else {
-            authorTag.style.display = "none";
-            displayBox.classList.remove('boss-level');
-        }
-
         targetSentence = sentences[currentLevel];
         renderText("");
         
@@ -671,16 +871,23 @@
             if(finalTime < 0.01) finalTime = 0.01;
             let finalWpm = Math.round((targetSentence.length / 5) / finalTime);
             
-            submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
+            let correctChars = 0;
+            for(let i=0; i<inputVal.length; i++) {
+                if(inputVal[i] === targetSentence[i]) correctChars++;
+            }
+            let finalAcc = Math.round((correctChars / inputVal.length) * 100);
+
+            studentSessionScores.push({ wpm: finalWpm, acc: finalAcc });
+            
+            if(!isTestMode) {
+                submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
+            }
 
             if (currentLevel < sentences.length - 1) {
                 currentLevel++;
                 setTimeout(loadLevel, 600); 
             } else {
-                openGlassAlert("🎉 全數挑戰成功！", `恭喜完成 4 關 Python 測試！包含辛承霖提供的魔王關卡！數據已同步上傳。`, function() {
-                    resetTestSystem();
-                    showPage('loginPage');
-                });
+                setTimeout(openResultReport, 400);
             }
         }
     }
@@ -785,7 +992,7 @@
                     <td>${student.lastTimestamp}</td>
                     <td><b>${student.seatNumber} 號</b></td>
                     <td style="color: var(--accent-color); font-weight:700;">${avgWpm} WPM</td>
-                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / 4 關</span></td>
+                    <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / ${sentences.length} 關</span></td>
                 `;
                 tbody.appendChild(tr);
             });
