@@ -266,7 +266,7 @@
         }
         [data-theme="light"] .playback-monitor { color: #16a34a; }
 
-        .playback-controls-row { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; font-family: sans-serif; }
+        .playback-controls-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; font-family: sans-serif; }
         .playback-controls-row .label { color: var(--text-muted); font-size: 14px; }
         
         .level-toggle-btn {
@@ -328,6 +328,10 @@
         .password-style { border-color: var(--info-color); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px var(--info-glow); }
         .password-style .glass-title { color: var(--info-color); text-shadow: 0 0 10px var(--info-glow); }
         
+        /* 🧪 測試密碼面板專用特徵色（紫色調高科技風） */
+        .test-password-style { border-color: #a855f7; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 0 30px rgba(168, 85, 247, 0.4); }
+        .test-password-style .glass-title { color: #a855f7; text-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+
         .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; font-weight: 700; }
         .glass-msg { font-size: 15px; color: var(--glass-card-msg); line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
         
@@ -383,11 +387,25 @@
         <div class="glass-title">🔐 安全身分驗證</div>
         <div class="glass-msg">此區域需要管理員權限。請輸入後台管理密碼：</div>
         <div class="form-group">
-            <input type="password" id="adminPasswordInput" placeholder="在此輸入密碼..." style="max-width: 100%; margin-bottom: 20px;">
+            <input type="password" id="adminPasswordInput" placeholder="在此輸入後台密碼..." style="max-width: 100%; margin-bottom: 20px;">
         </div>
         <div style="display: flex; justify-content: center; gap: 12px;">
             <button class="glass-btn btn-secondary" onclick="closePasswordPanel()">取消</button>
             <button class="glass-btn" onclick="submitAdminPassword()" style="background: linear-gradient(135deg, var(--info-color), #0284c7); box-shadow: 0 4px 15px var(--info-glow);">登入後台</button>
+        </div>
+    </div>
+</div>
+
+<div class="glass-overlay" id="glassTestPasswordOverlay">
+    <div class="glass-card test-password-style">
+        <div class="glass-title">🧪 測試模式權限驗證</div>
+        <div class="glass-msg">進入開發測試模式需要專屬存取碼。請輸入測試密碼：</div>
+        <div class="form-group">
+            <input type="password" id="testPasswordInput" placeholder="在此輸入測試密碼..." style="max-width: 100%; margin-bottom: 20px;">
+        </div>
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button class="glass-btn btn-secondary" onclick="closeTestPasswordPanel()">取消</button>
+            <button class="glass-btn" onclick="submitTestPassword()" style="background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 15px rgba(168,85,247,0.3);">驗證測試碼</button>
         </div>
     </div>
 </div>
@@ -473,6 +491,9 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
+    
+    // 💡 可以在這裡自由修改測試模式的密碼
+    const TEST_MODE_PASSWORD = "test1234"; 
 
     const sentences = [
         "print('hello python')",
@@ -490,8 +511,8 @@
 
     let studentSessionScores = []; 
     let isTestMode = false; 
-    let isMockingFullClass = false; // 🧪 是否啟動了全班完賽模擬假數據
-    let mockClassDataCache = {};    // 儲存產生的隨機班級記憶體數據
+    let isMockingFullClass = false; 
+    let mockClassDataCache = {};    
 
     // ✨ 主題切換
     function toggleTheme() {
@@ -529,7 +550,7 @@
     }
     let testOpt = document.createElement('option');
     testOpt.value = "TEST_MODE";
-    testOpt.textContent = "🧪 測試模式 (不計入資料庫)";
+    testOpt.textContent = "🧪 測試模式 (需要驗證碼)";
     seatSelect.appendChild(testOpt);
 
     function openGlassAlert(title, message, callback = null) {
@@ -546,8 +567,6 @@
     // 🏅 顯示挑戰報告
     function openResultReport() {
         document.getElementById('resultReportMeta').textContent = isTestMode ? "身分：🧪 測試體驗模式" : `座號：${currentSeatNumber} 號`;
-        
-        // 🧪 如果是測試模式，就把模擬完賽的紫色按鈕展示出來
         document.getElementById('mockFullClassBtn').style.display = isTestMode ? "inline-block" : "none";
         
         const detailBox = document.getElementById('resultReportDetail');
@@ -580,14 +599,13 @@
         showPage('loginPage');
     }
 
-    // 🧪 核心新增：模擬全班 29 人全數打完的記憶體資料
+    // 🧪 模擬全班完賽假數據
     function simulateFullClassCompletion() {
         isMockingFullClass = true;
         mockClassDataCache = {};
 
-        // 隨機生成 1 到 29 號的虛擬打字數據
         for (let i = 1; i <= 29; i++) {
-            let mockWpm1 = Math.floor(Math.random() * (90 - 30 + 1)) + 30; // 30 ~ 90 隨機速度
+            let mockWpm1 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
             let mockWpm2 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
             let mockWpm3 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
             
@@ -598,26 +616,23 @@
             ];
         }
 
-        // 把當前測試模式下，使用者打出來的真實速度覆蓋進去（假設當作 1 號或單純疊加）
         let totalUserWpm = 0;
         studentSessionScores.forEach(item => totalUserWpm += item.wpm);
         let userAvgWpm = Math.round(totalUserWpm / studentSessionScores.length) || 50;
 
-        // 將虛擬的 29 號替換成當前測試者的實測數據，增強帶入感！
         mockClassDataCache[29] = [
-            { number: "29 (你)", wpm: userAvgWpm },
-            { number: "29 (你)", wpm: userAvgWpm },
-            { number: "29 (你)", wpm: userAvgWpm }
+            { number: "29 (使用者)", wpm: userAvgWpm },
+            { number: "29 (使用者)", wpm: userAvgWpm },
+            { number: "29 (使用者)", wpm: userAvgWpm }
         ];
 
-        openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班 1~29 號不重複完賽假數據！點擊下方『查看班級排行榜』即可當場解鎖排行畫面！");
+        openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班不重複完賽假數據！點擊下方『查看班級排行榜』即可解鎖排行畫面！");
     }
 
-    // 🏆 排行榜檢查邏輯
+    // 🏆 排行榜檢查
     function checkClassLeaderboard() {
         document.getElementById('glassResultReport').classList.remove('active');
         
-        // 🧪 如果已經點了模擬完賽，直接走本地模擬渲染，完全不撈遠端資料庫
         if (isTestMode && isMockingFullClass) {
             document.getElementById('toggleModeBtn').textContent = "返回首頁";
             document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜 (🧪 測試模擬環境)";
@@ -647,25 +662,23 @@
             let finishedCount = Object.keys(studentMap).length;
             
             if (finishedCount >= 29) {
-                openGlassAlert("🎉 排行榜已解鎖！", "全班 29 位同學均已挑戰完畢！即刻載入榮譽榜單！", function() {
-                    document.getElementById('toggleModeBtn').textContent = "返回首頁";
-                    document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜";
-                    document.getElementById('refreshAdminDataBtn').style.display = "none"; 
-                    document.getElementById('playbackVisualBox').style.display = "none";
-                    showPage('adminPage');
-                    renderLeaderboardView(studentMap);
-                });
+                document.getElementById('toggleModeBtn').textContent = "返回首頁";
+                document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜";
+                document.getElementById('refreshAdminDataBtn').style.display = "none"; 
+                document.getElementById('playbackVisualBox').style.display = "none";
+                showPage('adminPage');
+                renderLeaderboardView(studentMap);
             } else {
                 openGlassAlert("🔒 尚未全面完賽", `目前全班完賽進度為 [ ${finishedCount} / 29 ]。需要等所有座號的同學都完成挑戰後，才能查看全班最終排行榜喔！\n\n💡 提示：若想預覽排行榜，可重新使用「🧪 測試模式」並在完賽時點擊紫色模擬按鈕解鎖！`);
             }
         })
         .catch(err => {
             console.error(err);
+            closeGlassAlert();
             openGlassAlert("⚠️ 連線失敗", "無法從雲端讀取排行狀態。");
         });
     }
 
-    // 渲染純排行版畫面
     function renderLeaderboardView(studentMap) {
         const tbody = document.getElementById('adminTableBody');
         tbody.innerHTML = "";
@@ -700,27 +713,30 @@
         });
     }
 
+    // 🔓 開啟/關閉管理員密碼面板
     function openPasswordPanel() {
         const btn = document.getElementById('toggleModeBtn');
-        if (btn.textContent === "切換至後台" || btn.textContent === "返回首頁") {
-            if(btn.textContent === "返回首頁") {
-                btn.textContent = "切換至後台";
-                resetTestSystem();
-                showPage('loginPage');
-                return;
-            }
-            document.getElementById('adminPasswordInput').value = "";
-            document.getElementById('glassPasswordOverlay').classList.add('active');
-            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 200);
-        } else {
+        if (btn.textContent === "返回首頁" || btn.textContent === "返回測試") {
             btn.textContent = "切換至後台";
             resetTestSystem();
             showPage('loginPage');
+            return;
         }
+        document.getElementById('adminPasswordInput').value = "";
+        document.getElementById('glassPasswordOverlay').classList.add('active');
+        setTimeout(() => document.getElementById('adminPasswordInput').focus(), 200);
     }
     function closePasswordPanel() { document.getElementById('glassPasswordOverlay').classList.remove('active'); }
 
-    // 後台密碼驗證
+    // 🧪 開啟/關閉測試密碼面板
+    function openTestPasswordPanel() {
+        document.getElementById('testPasswordInput').value = "";
+        document.getElementById('glassTestPasswordOverlay').classList.add('active');
+        setTimeout(() => document.getElementById('testPasswordInput').focus(), 200);
+    }
+    function closeTestPasswordPanel() { document.getElementById('glassTestPasswordOverlay').classList.remove('active'); }
+
+    // 驗證管理員密碼
     function submitAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value;
         if (!pass) return;
@@ -758,6 +774,27 @@
         });
     }
 
+    // 驗證測試模式密碼
+    function submitTestPassword() {
+        const inputPass = document.getElementById('testPasswordInput').value;
+        if (!inputPass) return;
+        
+        if (inputPass === TEST_MODE_PASSWORD) {
+            closeTestPasswordPanel();
+            openGlassAlert("🧪 授權成功", "已成功解鎖測試權限，進入體驗模式。", function() {
+                isTestMode = true;
+                currentSeatNumber = "TEST";
+                currentLevel = 0;
+                showPage('testPage');
+                initLiveChart();
+                loadLevel();
+                setupSecurityRestrictions();
+            });
+        } else {
+            openGlassAlert("❌ 密碼錯誤", "測試密碼不正確，拒絕存取。");
+        }
+    }
+
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
@@ -768,16 +805,12 @@
         const startBtn = document.getElementById('startBtn');
         
         studentSessionScores = []; 
-        isMockingFullClass = false; // 重置模擬開關
+        isMockingFullClass = false; 
+        document.getElementById('toggleModeBtn').textContent = "切換至後台";
 
+        // 🔒 如果選擇測試模式，跳出測試密碼面板
         if(selectedSeat === "TEST_MODE") {
-            isTestMode = true;
-            currentSeatNumber = "TEST";
-            currentLevel = 0;
-            showPage('testPage');
-            initLiveChart();
-            loadLevel();
-            setupSecurityRestrictions();
+            openTestPasswordPanel();
             return;
         }
 
@@ -819,7 +852,6 @@
 
     function loadLevel() {
         document.getElementById('progressDisplay').textContent = `關卡: ${currentLevel + 1} / ${sentences.length}`;
-        
         targetSentence = sentences[currentLevel];
         renderText("");
         
@@ -865,7 +897,7 @@
         }
 
         if (inputVal === targetSentence) {
-            clearInterval(timerInterval);
+            clearInterval(timerInterval); 
             inputField.disabled = true;
             let finalTime = (new Date() - startTime) / 1000 / 60;
             if(finalTime < 0.01) finalTime = 0.01;
@@ -951,6 +983,7 @@
         clearInterval(timerInterval);
         if(liveChart) liveChart.destroy();
         clearTimeout(playbackIntervalId);
+        document.getElementById('toggleModeBtn').textContent = "切換至後台";
     }
 
     // ================= 後台重播系統 =================
