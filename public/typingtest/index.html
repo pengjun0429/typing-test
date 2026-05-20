@@ -248,9 +248,8 @@
         @keyframes pulseGlow { from { box-shadow: 0 15px 35px rgba(251, 191, 36, 0.05); } to { box-shadow: 0 15px 45px rgba(251, 191, 36, 0.2); } }
         .rank-medal-text { font-size: 56px; font-weight: 900; color: var(--accent-color); margin: 10px 0; text-shadow: 0 0 20px var(--accent-glow); }
 
-        /* 📈 後台重播面板 */
+        /* 📈 重播面板（兼任查榜即時動態重播） */
         .admin-playback-box { 
-            display: none; 
             background: var(--word-display-bg); 
             padding: 25px; 
             border-radius: 16px; 
@@ -460,6 +459,24 @@
             </div>
         </div>
 
+        <div class="admin-playback-box" id="lookupPlaybackVisualBox" style="display: none; margin-bottom: 25px;">
+            <div class="playback-header">
+                 <div class="playback-title-text">⚡ 當時打字脈絡動態重播</div>
+                 <div class="playback-title-text" id="lookupPlaybackLevelTitle" style="color: var(--text-color);">關卡載入中...</div>
+            </div>
+            <div class="playback-controls-row">
+                <span class="label">切換關卡歷史：</span>
+                <div id="lookupPlaybackButtonArea" style="display: flex; gap: 8px;"></div>
+            </div>
+            <div class="playback-monitor">
+                <span id="lookupPlaybackTextScreen"></span><span id="lookupVirtualCursor" class="playback-cursor">&nbsp;</span>
+            </div>
+            <div class="playback-dash">
+                <span>重播時間: <b id="lookupPlaybackTimer">0</b> 秒</span>
+                <span>即時速度: <b id="lookupPlaybackWpm" style="color: var(--accent-color);">0</b> WPM</span>
+            </div>
+        </div>
+
         <div id="typingMainPlayArea">
             <div class="word-display" id="sentenceDisplay"></div>
             <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方的代碼..." autocomplete="off" disabled>
@@ -476,9 +493,10 @@
         <h2 id="adminPageTitle">📊 班級挑戰紀錄後台</h2>
         <div style="text-align: center; margin-bottom: 30px;">
             <button class="btn-center" id="refreshAdminDataBtn" onclick="fetchAdminData()" style="display:inline-block; margin:0 10px; padding: 12px 25px; font-size: 14px;">🔄 重新整理數據</button>
+            <button class="btn-center" id="adminBackHomeBtn" onclick="backToLoginFromAdmin()" style="display:none; inline-block; margin:0 10px; padding: 12px 25px; font-size: 14px; background: rgba(15,23,42,0.05); color: var(--text-color); border: 1px solid var(--input-border); box-shadow: none;">返回登入頁</button>
         </div>
         
-        <div class="admin-playback-box" id="playbackVisualBox">
+        <div class="admin-playback-box" id="playbackVisualBox" style="display: none;">
             <div class="playback-header">
                  <div class="playback-title-text" id="playbackMainTitle">打字脈絡演示</div>
                  <div class="playback-title-text" id="playbackSeatTitle" style="color: var(--text-color);"></div>
@@ -504,11 +522,12 @@
                     <th>最新測試時間</th>
                     <th>座號</th>
                     <th>平均 WPM</th>
+                    <th>連線記錄 (IP)</th>
                     <th>完成進度</th>
                 </tr>
             </thead>
             <tbody id="adminTableBody">
-                <tr><td colspan="4">請點選重新整理數據</td></tr>
+                <tr><td colspan="5">請點選重新整理數據</td></tr>
             </tbody>
         </table>
     </div>
@@ -530,7 +549,7 @@
     let startTime = null; let timerInterval = null; let isTestActive = false;
     let speedHistory = []; let secondsElapsed = 0;
     let liveChart = null; 
-    let playbackIntervalId = null; 
+    let playbackIntervalId = null; let lookupPlaybackIntervalId = null;
     let globalAdminData = []; let glassCallback = null;
     let currentSelectedSeatRecords = [];
 
@@ -538,6 +557,24 @@
     let isTestMode = false; 
     let isMockingFullClass = false; 
     let mockClassDataCache = {};    
+    let userCurrentIP = "未知";
+
+    // 🚀 初始化偵測：非管理員登入且曾經完賽者，下次進來自動跳過首頁跳轉排行榜
+    window.addEventListener('DOMContentLoaded', () => {
+        // 先偷偷抓取使用者當前公網 IP
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => { if(data.ip) userCurrentIP = data.ip; })
+            .catch(e => console.log("IP 獲取受限或受擋牆干擾"));
+
+        // 偵測是否存有自動跳排行榜的 localStorage 標籤
+        if (localStorage.getItem('fjm_typing_completed') === 'true') {
+            console.log("偵測到此裝置已完賽，自動為您引導至班級總排行榜...");
+            setTimeout(() => {
+                autoRedirectToClassLeaderboard();
+            }, 300);
+        }
+    });
 
     // ✨ 主題切換
     function toggleTheme() {
@@ -615,6 +652,12 @@
                 <span style="color: var(--accent-color); font-size: 16px;">${avgWpm} WPM</span>
             </div>
         `;
+
+        // 完賽標記寫入 localStorage 供下次自動開啟排行榜使用
+        if(!isTestMode) {
+            localStorage.setItem('fjm_typing_completed', 'true');
+        }
+
         document.getElementById('glassResultReport').classList.add('active');
     }
     
@@ -635,9 +678,9 @@
             let mockWpm3 = Math.floor(Math.random() * (90 - 30 + 1)) + 30;
             
             mockClassDataCache[i] = [
-                { number: i, wpm: mockWpm1 },
-                { number: i, wpm: mockWpm2 },
-                { number: i, wpm: mockWpm3 }
+                { number: i, wpm: mockWpm1, ip: "127.0.0.1" },
+                { number: i, wpm: mockWpm2, ip: "127.0.0.1" },
+                { number: i, wpm: mockWpm3, ip: "127.0.0.1" }
             ];
         }
 
@@ -646,9 +689,9 @@
         let userAvgWpm = Math.round(totalUserWpm / studentSessionScores.length) || 50;
 
         mockClassDataCache[29] = [
-            { number: "29", wpm: userAvgWpm },
-            { number: "29", wpm: userAvgWpm },
-            { number: "29", wpm: userAvgWpm }
+            { number: "29", wpm: userAvgWpm, ip: "127.0.0.1" },
+            { number: "29", wpm: userAvgWpm, ip: "127.0.0.1" },
+            { number: "29", wpm: userAvgWpm, ip: "127.0.0.1" }
         ];
 
         openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班不重複完賽假數據！點擊下方『查看班級成績單』即可解鎖排行畫面！");
@@ -663,6 +706,7 @@
             document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰賽總成績單 (🧪 測試模擬環境)";
             document.getElementById('refreshAdminDataBtn').style.display = "none"; 
             document.getElementById('playbackVisualBox').style.display = "none";
+            document.getElementById('adminBackHomeBtn').style.display = "inline-block";
             showPage('adminPage');
             renderLeaderboardView(mockClassDataCache);
             return;
@@ -691,6 +735,7 @@
                 document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰賽總成績單";
                 document.getElementById('refreshAdminDataBtn').style.display = "none"; 
                 document.getElementById('playbackVisualBox').style.display = "none";
+                document.getElementById('adminBackHomeBtn').style.display = "inline-block";
                 showPage('adminPage');
                 renderLeaderboardView(studentMap);
             } else {
@@ -704,6 +749,32 @@
         });
     }
 
+    // 🚀 下次進來自動引導至排行榜專用函數
+    function autoRedirectToClassLeaderboard() {
+        fetch(API_URL, { method: "GET", mode: "cors" })
+        .then(res => res.json())
+        .then(data => {
+            let studentMap = {};
+            data.forEach(row => {
+                let seat = parseInt(row.number);
+                if(seat >= 1 && seat <= 29) {
+                    if(!studentMap[seat]) studentMap[seat] = [];
+                    studentMap[seat].push(row);
+                }
+            });
+            let finishedCount = Object.keys(studentMap).length;
+            if (finishedCount >= 29) {
+                document.getElementById('toggleModeBtn').textContent = "返回首頁";
+                document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰賽總成績單 (智慧引導)";
+                document.getElementById('refreshAdminDataBtn').style.display = "none"; 
+                document.getElementById('playbackVisualBox').style.display = "none";
+                document.getElementById('adminBackHomeBtn').style.display = "inline-block";
+                showPage('adminPage');
+                renderLeaderboardView(studentMap);
+            }
+        }).catch(e => console.log("自動查榜讀取受限"));
+    }
+
     function renderLeaderboardView(studentMap) {
         const tbody = document.getElementById('adminTableBody');
         tbody.innerHTML = "";
@@ -712,7 +783,7 @@
             let sumWpm = 0;
             student.forEach(r => sumWpm += r.wpm);
             let avgWpm = Math.round(sumWpm / student.length);
-            return { seat: student[0].number, avgWpm: avgWpm };
+            return { seat: student[0].number, avgWpm: avgWpm, ip: student[0].ip || "未知" };
         }).sort((a, b) => b.avgWpm - a.avgWpm); 
         
         document.getElementById('adminTableHeader').innerHTML = `
@@ -720,6 +791,7 @@
                 <th>名次</th>
                 <th>座號</th>
                 <th>全關卡平均速度</th>
+                <th>認證 IP 紀錄</th>
                 <th>競速狀態</th>
             </tr>
         `;
@@ -732,10 +804,16 @@
                 <td><b>${medal}</b></td>
                 <td><b>${item.seat} 號</b></td>
                 <td style="color: var(--accent-color); font-weight:700; font-size:16px;">${item.avgWpm} WPM</td>
+                <td style="font-size:13px; color: var(--text-muted); font-family: monospace;">${item.ip}</td>
                 <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">挑戰成功</span></td>
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    function backToLoginFromAdmin() {
+        resetTestSystem();
+        showPage('loginPage');
     }
 
     // 🔓 開啟/關閉管理員密碼面板
@@ -779,11 +857,13 @@
                     document.getElementById('toggleModeBtn').textContent = "返回測試";
                     document.getElementById('adminPageTitle').textContent = "📊 班級挑戰紀錄後台";
                     document.getElementById('refreshAdminDataBtn').style.display = "inline-block";
+                    document.getElementById('adminBackHomeBtn').style.display = "none";
                     document.getElementById('adminTableHeader').innerHTML = `
                         <tr>
                             <th>最新測試時間</th>
                             <th>座號</th>
                             <th>平均 WPM</th>
+                            <th>連線記錄 (IP)</th>
                             <th>完成進度</th>
                         </tr>
                     `;
@@ -813,6 +893,7 @@
                 
                 // 還原可能被查榜模式隱藏的 UI
                 document.getElementById('rankBadgeDisplayArea').style.display = "none";
+                document.getElementById('lookupPlaybackVisualBox').style.display = "none";
                 document.getElementById('typingMainPlayArea').style.display = "block";
                 document.getElementById('chartViewContainer').style.display = "block";
                 document.getElementById('timerCardContainer').style.display = "block";
@@ -859,7 +940,6 @@
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關連續測試";
             
-            // 分析全班目前上傳的數據結構
             let studentMap = {};
             data.forEach(row => {
                 let seat = parseInt(row.number);
@@ -869,11 +949,9 @@
                 }
             });
             
-            // 計算全班不重複完成人數
             let finishedCount = Object.keys(studentMap).length;
             let isUserFinished = (studentMap[selectedSeat] && studentMap[selectedSeat].length >= sentences.length);
             
-            // 🏅 計算排名矩陣
             let sortedRankList = Object.values(studentMap).map(student => {
                 let sumWpm = 0;
                 student.forEach(r => sumWpm += r.wpm);
@@ -884,26 +962,20 @@
             let myRankIndex = sortedRankList.findIndex(item => item.seat === String(selectedSeat));
             let myRankNum = myRankIndex !== -1 ? (myRankIndex + 1) : "--";
 
-            // ⚡ 核心條件判斷
             if (finishedCount >= 29) {
-                // 🔓 條件 1：全班都完成了 -> 不管有沒有打過，直接解鎖查榜！
                 currentSeatNumber = selectedSeat;
                 enterHonorLookupMode(studentMap[selectedSeat], myRankNum, true);
             } else {
-                // 🔒 條件 2：全班還沒全部好
                 if (isUserFinished) {
-                    // 如果該座號已經完成，不允許重複挑戰，但彈窗提示「當時排名」
-                    openGlassAlert(
-                        "🔒 無法重複挑戰", 
-                        `${selectedSeat} 號使用者已經完成過本次測試囉！\n\n📊 您目前的即時排名為：第 ${myRankNum} 名\n\n💡 提示：當全班 29 人全數打完之後，此選單將會自動轉為『榮譽查榜模式』，屆時就能直接進來查看您的最終定格名次與詳細成績單囉！`
-                    );
+                    currentSeatNumber = selectedSeat;
+                    // 改為：全班還沒打完但自己打完時，一樣能進去「榮譽查榜重播模式」，可以看到自己當前的即時排名！
+                    enterHonorLookupMode(studentMap[selectedSeat], myRankNum, false);
                 } else {
-                    // 正常開始新挑戰
                     currentSeatNumber = selectedSeat;
                     currentLevel = 0; 
                     
-                    // 還原可能被查榜隱藏的 UI
                     document.getElementById('rankBadgeDisplayArea').style.display = "none";
+                    document.getElementById('lookupPlaybackVisualBox').style.display = "none";
                     document.getElementById('typingMainPlayArea').style.display = "block";
                     document.getElementById('chartViewContainer').style.display = "block";
                     document.getElementById('timerCardContainer').style.display = "block";
@@ -926,20 +998,17 @@
         });
     }
 
-    // 🏆 切換至查榜視覺介面
+    // 🏆 切換至查榜視覺介面 (升級：帶入與後台完全一樣的動態重播面板與脈絡圖表)
     function enterHonorLookupMode(myRecords, rankNum, isFullClass) {
         document.getElementById('progressDisplay').textContent = `✨ 榮譽查榜模式 | 座號：${currentSeatNumber} 號`;
         
-        // 隱藏不需要的打字練習元件與時間卡
         document.getElementById('typingMainPlayArea').style.display = "none";
-        document.getElementById('chartViewContainer').style.display = "none";
         document.getElementById('timerCardContainer').style.display = "none";
+        document.getElementById('chartViewContainer').style.display = "block"; // 圖表用來重播脈絡
         
-        // 變更儀表板抬頭
         document.getElementById('wpmCardTitle').textContent = "全關卡平均速度";
         document.getElementById('accCardTitle').textContent = "挑戰狀態";
 
-        // 渲染名次大標章
         const badgeArea = document.getElementById('rankBadgeDisplayArea');
         const medalText = document.getElementById('rankMedalText');
         const metaText = document.getElementById('rankBadgeMetaInfo');
@@ -955,10 +1024,9 @@
         if (isFullClass) {
             metaText.textContent = "🎉 全班皆已完賽！這是您在這場挑戰賽中的最終定格榮譽名次。";
         } else {
-            metaText.textContent = "📊 全班尚未全數完賽，此為目前記憶體中之虛擬模擬排名。";
+            metaText.textContent = `📊 全班尚未全數完賽，此為目前班級即時排行名次。`;
         }
 
-        // 帶入該同學的成績歷史數據
         let totalWpm = 0;
         if (myRecords && myRecords.length > 0) {
             myRecords.forEach(r => totalWpm += r.wpm);
@@ -971,6 +1039,106 @@
 
         document.getElementById('toggleModeBtn').textContent = "返回首頁";
         showPage('testPage');
+
+        // 初始化查榜專用重播器
+        initLookupPlaybackGroup(myRecords);
+    }
+
+    // 📟 查榜專用：初始化關卡切換鈕與重播機制
+    function initLookupPlaybackGroup(records) {
+        clearTimeout(lookupPlaybackIntervalId);
+        const playBox = document.getElementById('lookupPlaybackVisualBox');
+        playBox.style.display = "block";
+
+        const btnArea = document.getElementById('lookupPlaybackButtonArea');
+        btnArea.innerHTML = "";
+
+        records.forEach((rec, idx) => {
+            let btn = document.createElement('button');
+            btn.className = "level-toggle-btn";
+            btn.textContent = `關卡 ${idx + 1}`;
+            
+            btn.onclick = function() {
+                document.querySelectorAll('#lookupPlaybackButtonArea .level-toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                clearTimeout(lookupPlaybackIntervalId);
+                executeLookupCorePlayback(rec);
+            };
+            btnArea.appendChild(btn);
+        });
+
+        if (btnArea.firstChild) btnArea.firstChild.click();
+    }
+
+    function executeLookupCorePlayback(record) {
+        const historyData = record.history || [0];
+        let mockFullText = record.typedText || ""; 
+
+        document.getElementById('lookupPlaybackLevelTitle').textContent = `歷史 WPM: ${record.wpm} | 紀錄公網 IP: ${record.ip || "未知"}`;
+
+        const textScreen = document.getElementById('lookupPlaybackTextScreen');
+        const cursor = document.getElementById('lookupVirtualCursor');
+        textScreen.textContent = "";
+        cursor.classList.remove('stopped'); 
+
+        // 重新繪製該關卡的靜態折線圖脈絡
+        if(liveChart) liveChart.destroy();
+        const ctx = document.getElementById('liveChart').getContext('2d');
+        let labels = historyData.map((_, i) => i);
+        liveChart = new Chart(ctx, {
+            type: 'line',
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    data: historyData, borderColor: '#38bdf8', borderWidth: 3, tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(56, 189, 248, 0.05)'
+                }] 
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false, animation: { duration: 800 },
+                plugins: { legend: { display: false } }, 
+                scales: { x: { display: true, ticks: { font: { size: 9 } } }, y: { display: true, position: 'right', ticks: { maxTicksLimit: 3, font: { size: 10 } } } } 
+            }
+        });
+        updateChartColors();
+
+        let currentCharIndex = 0;
+        let currentSecond = 0;
+
+        function runNextSecond() {
+            if (currentSecond >= historyData.length || currentCharIndex >= mockFullText.length) {
+                cursor.classList.add('stopped'); 
+                return;
+            }
+
+            let currentWpm = historyData[currentSecond] || 0;
+            document.getElementById('lookupPlaybackTimer').textContent = currentSecond;
+            document.getElementById('lookupPlaybackWpm').textContent = currentWpm;
+
+            let charsToTypeThisSecond = Math.ceil((currentWpm * 5) / 60) || 0;
+            if (currentWpm > 0 && charsToTypeThisSecond === 0) charsToTypeThisSecond = 1;
+
+            if (charsToTypeThisSecond > 0) {
+                let msPerChar = Math.floor(1000 / charsToTypeThisSecond);
+                let charCountSent = 0;
+
+                function triggerSingleChar() {
+                    if (charCountSent < charsToTypeThisSecond && currentCharIndex < mockFullText.length) {
+                        textScreen.textContent += mockFullText[currentCharIndex];
+                        currentCharIndex++;
+                        charCountSent++;
+                        lookupPlaybackIntervalId = setTimeout(triggerSingleChar, msPerChar);
+                    } else {
+                        currentSecond++;
+                        runNextSecond();
+                    }
+                }
+                triggerSingleChar();
+            } else {
+                currentSecond++;
+                lookupPlaybackIntervalId = setTimeout(runNextSecond, 1000);
+            }
+        }
+        runNextSecond();
     }
 
     function backToLoginFromLookup() {
@@ -1047,7 +1215,8 @@
             studentSessionScores.push({ wpm: finalWpm, acc: finalAcc });
             
             if(!isTestMode) {
-                submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence);
+                // 將當前撈到的 IP 一同打包回傳給後台紀錄
+                submitScore(currentSeatNumber, finalWpm, speedHistory, targetSentence, userCurrentIP);
             }
 
             if (currentLevel < sentences.length - 1) {
@@ -1104,11 +1273,11 @@
         updateChartColors();
     }
 
-    function submitScore(seat, wpm, history, typedText) {
+    function submitScore(seat, wpm, history, typedText, ipAddress) {
         fetch(API_URL, {
             method: "POST",
             mode: "cors",
-            body: JSON.stringify({ number: seat, wpm: wpm, history: history, typedText: typedText })
+            body: JSON.stringify({ number: seat, wpm: wpm, history: history, typedText: typedText, ip: ipAddress })
         })
         .then(res => res.json())
         .catch(err => console.log("背景資料同步中...", err));
@@ -1118,6 +1287,8 @@
         clearInterval(timerInterval);
         if(liveChart) liveChart.destroy();
         clearTimeout(playbackIntervalId);
+        clearTimeout(lookupPlaybackIntervalId);
+        document.getElementById('lookupPlaybackVisualBox').style.display = "none";
         document.getElementById('toggleModeBtn').textContent = "切換至後台";
     }
 
@@ -1125,7 +1296,7 @@
 
     function fetchAdminData() {
         const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = `<tr><td colspan="4">正在即時讀取資料庫...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5">正在即時讀取資料庫...</td></tr>`;
 
         fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
@@ -1133,7 +1304,7 @@
             globalAdminData = data; 
             tbody.innerHTML = "";
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4">目前資料庫尚無學生成績紀錄。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5">目前資料庫尚無學生成績紀錄。</td></tr>`;
                 return;
             }
 
@@ -1153,6 +1324,7 @@
                 let sumWpm = 0;
                 student.records.forEach(r => sumWpm += r.wpm);
                 let avgWpm = Math.round(sumWpm / student.records.length);
+                let lastIp = student.records[0].ip || "未知";
 
                 let tr = document.createElement('tr');
                 tr.onclick = () => initStudentPlaybackGroup(student.seatNumber, student.records); 
@@ -1160,13 +1332,14 @@
                     <td>${student.lastTimestamp}</td>
                     <td><b>${student.seatNumber} 號</b></td>
                     <td style="color: var(--accent-color); font-weight:700;">${avgWpm} WPM</td>
+                    <td style="font-size:13px; color: var(--text-muted); font-family:monospace;">${lastIp}</td>
                     <td><span style="background: rgba(74,222,128,0.1); color: var(--success-color); padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600;">${student.records.length} / ${sentences.length} 關</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }).catch((err) => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="4" style="color: var(--error-color);">讀取失敗，請檢查 API 發布網址。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="color: var(--error-color);">讀取失敗，請檢查 API 發布網址。</td></tr>`;
         });
     }
 
@@ -1186,7 +1359,7 @@
             btn.textContent = `關卡 ${idx + 1}`;
             
             btn.onclick = function() {
-                document.querySelectorAll('.level-toggle-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#playbackButtonArea .level-toggle-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 clearTimeout(playbackIntervalId);
                 executeCorePlayback(rec);
