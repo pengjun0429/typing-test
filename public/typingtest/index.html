@@ -234,6 +234,20 @@
         }
         .input-field:focus { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(251, 191, 36, 0.05); }
         
+        /* 🏅 榮譽查榜面板樣式 */
+        .rank-badge-box {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+            border: 2px solid var(--accent-color);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(251, 191, 36, 0.1);
+            animation: pulseGlow 3s infinite alternate;
+        }
+        @keyframes pulseGlow { from { box-shadow: 0 15px 35px rgba(251, 191, 36, 0.05); } to { box-shadow: 0 15px 45px rgba(251, 191, 36, 0.2); } }
+        .rank-medal-text { font-size: 56px; font-weight: 900; color: var(--accent-color); margin: 10px 0; text-shadow: 0 0 20px var(--accent-glow); }
+
         /* 📈 後台重播面板 */
         .admin-playback-box { 
             display: none; 
@@ -333,7 +347,7 @@
         .test-password-style .glass-title { color: #a855f7; text-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
 
         .glass-title { font-size: 24px; color: var(--accent-color); margin-bottom: 18px; font-family: sans-serif; font-weight: 700; }
-        .glass-msg { font-size: 15px; color: var(--glass-card-msg); line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; }
+        .glass-msg { font-size: 15px; color: var(--glass-card-msg); line-height: 1.6; margin-bottom: 25px; font-family: sans-serif; white-space: pre-line; }
         
         .glass-btn {
             background: linear-gradient(135deg, var(--accent-color), #f97316);
@@ -376,7 +390,7 @@
             </div>
         <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
             <button class="glass-btn" id="mockFullClassBtn" onclick="simulateFullClassCompletion()" style="background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 15px rgba(168,85,247,0.4); display: none;">🧪 模擬全班完賽 (測試專用)</button>
-            <button class="glass-btn" onclick="checkClassLeaderboard()" style="background: linear-gradient(135deg, var(--info-color), #0284c7); box-shadow: 0 4px 15px var(--info-glow);">🏆 查看班級排行榜</button>
+            <button class="glass-btn" onclick="checkClassLeaderboard()" style="background: linear-gradient(135deg, var(--info-color), #0284c7); box-shadow: 0 4px 15px var(--info-glow);">🏆 查看班級成績單</button>
             <button class="glass-btn btn-secondary" onclick="closeResultReport()">返回首頁</button>
         </div>
     </div>
@@ -425,26 +439,37 @@
     <div id="testPage" class="page">
         <div class="progress-box" id="progressDisplay">目前關卡: 1 / 3</div>
         
+        <div class="rank-badge-box" id="rankBadgeDisplayArea" style="display: none;">
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-color);">🏆 全班榮譽排行榜</div>
+            <div class="rank-medal-text" id="rankMedalText">第 -- 名</div>
+            <div style="color: var(--text-muted); font-size: 14px;" id="rankBadgeMetaInfo">恭喜完成全部關卡挑戰！</div>
+        </div>
+
         <div class="dashboard">
             <div class="dash-card">
-                <div class="dash-item">本關速度 WPM</div>
+                <div class="dash-item" id="wpmCardTitle">本關速度 WPM</div>
                 <div class="dash-value" id="liveWpm" style="color: var(--accent-color);">0</div>
             </div>
             <div class="dash-card">
-                <div class="dash-item">精確度</div>
+                <div class="dash-item" id="accCardTitle">精確度</div>
                 <div class="dash-value" id="liveAcc" style="color: var(--success-color);">100%</div>
             </div>
-            <div class="dash-card">
+            <div class="dash-card" id="timerCardContainer">
                 <div class="dash-item">已過時間</div>
                 <div class="dash-value" id="timer">0</div>
             </div>
         </div>
-        <div class="word-display" id="sentenceDisplay"></div>
-        <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方的代碼..." autocomplete="off" disabled>
+
+        <div id="typingMainPlayArea">
+            <div class="word-display" id="sentenceDisplay"></div>
+            <input type="text" id="typingInput" class="input-field" placeholder="在此輸入上方的代碼..." autocomplete="off" disabled>
+        </div>
         
-        <div class="chart-container">
+        <div class="chart-container" id="chartViewContainer">
             <canvas id="liveChart"></canvas>
         </div>
+
+        <button class="btn-center" id="exitLookupBtn" onclick="backToLoginFromLookup()" style="display: none; margin-top: 30px; background: rgba(15,23,42,0.05); color: var(--text-color); border: 1px solid var(--input-border); box-shadow: none;">返回首頁</button>
     </div>
 
     <div id="adminPage" class="page">
@@ -490,7 +515,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyFOYZ58D42Cv5DUsK2dwxcJD6fkfnpxaYZRS8pKruenIWjCVe2q95rEWKSyS7lbqZj/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycby-bdiAGG2_A_TZ0dWfrgHjp897GweIJutityOlBOl9Nz7W7UPCF4FM3AWez9IP8dij/exec"; 
     
     // 💡 可以在這裡自由修改測試模式的密碼
     const TEST_MODE_PASSWORD = "test1234"; 
@@ -621,21 +646,21 @@
         let userAvgWpm = Math.round(totalUserWpm / studentSessionScores.length) || 50;
 
         mockClassDataCache[29] = [
-            { number: "29 (使用者)", wpm: userAvgWpm },
-            { number: "29 (使用者)", wpm: userAvgWpm },
-            { number: "29 (使用者)", wpm: userAvgWpm }
+            { number: "29", wpm: userAvgWpm },
+            { number: "29", wpm: userAvgWpm },
+            { number: "29", wpm: userAvgWpm }
         ];
 
-        openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班不重複完賽假數據！點擊下方『查看班級排行榜』即可解鎖排行畫面！");
+        openGlassAlert("⚡ 虛擬模擬成功！", "已在記憶體中生成全班不重複完賽假數據！點擊下方『查看班級成績單』即可解鎖排行畫面！");
     }
 
-    // 🏆 排行榜檢查
+    // 🏆 排行榜檢查（全班打完免密碼開放觀看）
     function checkClassLeaderboard() {
         document.getElementById('glassResultReport').classList.remove('active');
         
         if (isTestMode && isMockingFullClass) {
             document.getElementById('toggleModeBtn').textContent = "返回首頁";
-            document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜 (🧪 測試模擬環境)";
+            document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰賽總成績單 (🧪 測試模擬環境)";
             document.getElementById('refreshAdminDataBtn').style.display = "none"; 
             document.getElementById('playbackVisualBox').style.display = "none";
             showPage('adminPage');
@@ -663,13 +688,13 @@
             
             if (finishedCount >= 29) {
                 document.getElementById('toggleModeBtn').textContent = "返回首頁";
-                document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰榮譽排行榜";
+                document.getElementById('adminPageTitle').textContent = "🏆 全班打字挑戰賽總成績單";
                 document.getElementById('refreshAdminDataBtn').style.display = "none"; 
                 document.getElementById('playbackVisualBox').style.display = "none";
                 showPage('adminPage');
                 renderLeaderboardView(studentMap);
             } else {
-                openGlassAlert("🔒 尚未全面完賽", `目前全班完賽進度為 [ ${finishedCount} / 29 ]。需要等所有座號的同學都完成挑戰後，才能查看全班最終排行榜喔！\n\n💡 提示：若想預覽排行榜，可重新使用「🧪 測試模式」並在完賽時點擊紫色模擬按鈕解鎖！`);
+                openGlassAlert("🔒 尚未全面完賽", `目前全班完賽進度為 [ ${finishedCount} / 29 ]。\n\n當 1 到 29 號的所有同學都完成挑戰後，系統就會自動對大家公開總成績單喔！請大家加把勁！\n\n💡 提示：若想預覽排行榜，可重新使用「🧪 測試模式」並在完賽時點擊紫色模擬按鈕解鎖！`);
             }
         })
         .catch(err => {
@@ -785,6 +810,16 @@
                 isTestMode = true;
                 currentSeatNumber = "TEST";
                 currentLevel = 0;
+                
+                // 還原可能被查榜模式隱藏的 UI
+                document.getElementById('rankBadgeDisplayArea').style.display = "none";
+                document.getElementById('typingMainPlayArea').style.display = "block";
+                document.getElementById('chartViewContainer').style.display = "block";
+                document.getElementById('timerCardContainer').style.display = "block";
+                document.getElementById('exitLookupBtn').style.display = "none";
+                document.getElementById('wpmCardTitle').textContent = "本關速度 WPM";
+                document.getElementById('accCardTitle').textContent = "精確度";
+
                 showPage('testPage');
                 initLiveChart();
                 loadLevel();
@@ -800,6 +835,7 @@
         document.getElementById(pageId).classList.add('active');
     }
 
+    // 🚀 主入口：整合「挑戰模式」與「查榜榮譽模式」
     function startTest() {
         const selectedSeat = seatSelect.value;
         const startBtn = document.getElementById('startBtn');
@@ -808,7 +844,6 @@
         isMockingFullClass = false; 
         document.getElementById('toggleModeBtn').textContent = "切換至後台";
 
-        // 🔒 如果選擇測試模式，跳出測試密碼面板
         if(selectedSeat === "TEST_MODE") {
             openTestPasswordPanel();
             return;
@@ -818,29 +853,129 @@
         startBtn.disabled = true;
         startBtn.textContent = "正在核對...";
 
-        fetch(`${API_URL}?checkSeat=${selectedSeat}`, { method: "GET", mode: "cors" })
+        fetch(API_URL, { method: "GET", mode: "cors" })
         .then(res => res.json())
         .then(data => {
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關連續測試";
             
-            if (data.duplicate) {
-                openGlassAlert("🔒 無法重複挑戰", `${selectedSeat} 號同學已經完成過本次 Python 測試囉！`);
-            } else {
+            // 分析全班目前上傳的數據結構
+            let studentMap = {};
+            data.forEach(row => {
+                let seat = parseInt(row.number);
+                if(seat >= 1 && seat <= 29) {
+                    if(!studentMap[seat]) studentMap[seat] = [];
+                    studentMap[seat].push(row);
+                }
+            });
+            
+            // 計算全班不重複完成人數
+            let finishedCount = Object.keys(studentMap).length;
+            let isUserFinished = (studentMap[selectedSeat] && studentMap[selectedSeat].length >= sentences.length);
+            
+            // 🏅 計算排名矩陣
+            let sortedRankList = Object.values(studentMap).map(student => {
+                let sumWpm = 0;
+                student.forEach(r => sumWpm += r.wpm);
+                let avgWpm = Math.round(sumWpm / student.length);
+                return { seat: String(student[0].number), avgWpm: avgWpm };
+            }).sort((a, b) => b.avgWpm - a.avgWpm);
+
+            let myRankIndex = sortedRankList.findIndex(item => item.seat === String(selectedSeat));
+            let myRankNum = myRankIndex !== -1 ? (myRankIndex + 1) : "--";
+
+            // ⚡ 核心條件判斷
+            if (finishedCount >= 29) {
+                // 🔓 條件 1：全班都完成了 -> 不管有沒有打過，直接解鎖查榜！
                 currentSeatNumber = selectedSeat;
-                currentLevel = 0; 
-                showPage('testPage');
-                initLiveChart();
-                loadLevel();
-                setupSecurityRestrictions();
+                enterHonorLookupMode(studentMap[selectedSeat], myRankNum, true);
+            } else {
+                // 🔒 條件 2：全班還沒全部好
+                if (isUserFinished) {
+                    // 如果該座號已經完成，不允許重複挑戰，但彈窗提示「當時排名」
+                    openGlassAlert(
+                        "🔒 無法重複挑戰", 
+                        `${selectedSeat} 號使用者已經完成過本次測試囉！\n\n📊 您目前的即時排名為：第 ${myRankNum} 名\n\n💡 提示：當全班 29 人全數打完之後，此選單將會自動轉為『榮譽查榜模式』，屆時就能直接進來查看您的最終定格名次與詳細成績單囉！`
+                    );
+                } else {
+                    // 正常開始新挑戰
+                    currentSeatNumber = selectedSeat;
+                    currentLevel = 0; 
+                    
+                    // 還原可能被查榜隱藏的 UI
+                    document.getElementById('rankBadgeDisplayArea').style.display = "none";
+                    document.getElementById('typingMainPlayArea').style.display = "block";
+                    document.getElementById('chartViewContainer').style.display = "block";
+                    document.getElementById('timerCardContainer').style.display = "block";
+                    document.getElementById('exitLookupBtn').style.display = "none";
+                    document.getElementById('wpmCardTitle').textContent = "本關速度 WPM";
+                    document.getElementById('accCardTitle').textContent = "精確度";
+
+                    showPage('testPage');
+                    initLiveChart();
+                    loadLevel();
+                    setupSecurityRestrictions();
+                }
             }
         })
         .catch(err => {
             console.error(err);
             startBtn.disabled = false;
             startBtn.textContent = "開始 3 關連續測試";
-            openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號驗證。");
+            openGlassAlert("⚠️ 網路異常", "無法連接資料庫進行座號進度驗證。");
         });
+    }
+
+    // 🏆 切換至查榜視覺介面
+    function enterHonorLookupMode(myRecords, rankNum, isFullClass) {
+        document.getElementById('progressDisplay').textContent = `✨ 榮譽查榜模式 | 座號：${currentSeatNumber} 號`;
+        
+        // 隱藏不需要的打字練習元件與時間卡
+        document.getElementById('typingMainPlayArea').style.display = "none";
+        document.getElementById('chartViewContainer').style.display = "none";
+        document.getElementById('timerCardContainer').style.display = "none";
+        
+        // 變更儀表板抬頭
+        document.getElementById('wpmCardTitle').textContent = "全關卡平均速度";
+        document.getElementById('accCardTitle').textContent = "挑戰狀態";
+
+        // 渲染名次大標章
+        const badgeArea = document.getElementById('rankBadgeDisplayArea');
+        const medalText = document.getElementById('rankMedalText');
+        const metaText = document.getElementById('rankBadgeMetaInfo');
+        
+        badgeArea.style.display = "block";
+        document.getElementById('exitLookupBtn').style.display = "block";
+        
+        if (rankNum === 1) medalText.textContent = "🥇 冠軍";
+        else if (rankNum === 2) medalText.textContent = "🥈 亞軍";
+        else if (rankNum === 3) medalText.textContent = "🥉 季軍";
+        else medalText.textContent = `第 ${rankNum} 名`;
+
+        if (isFullClass) {
+            metaText.textContent = "🎉 全班皆已完賽！這是您在這場挑戰賽中的最終定格榮譽名次。";
+        } else {
+            metaText.textContent = "📊 全班尚未全數完賽，此為目前記憶體中之虛擬模擬排名。";
+        }
+
+        // 帶入該同學的成績歷史數據
+        let totalWpm = 0;
+        if (myRecords && myRecords.length > 0) {
+            myRecords.forEach(r => totalWpm += r.wpm);
+            let avgWpm = Math.round(totalWpm / myRecords.length);
+            document.getElementById('liveWpm').textContent = avgWpm;
+        } else {
+            document.getElementById('liveWpm').textContent = "--";
+        }
+        document.getElementById('liveAcc').textContent = "挑戰成功";
+
+        document.getElementById('toggleModeBtn').textContent = "返回首頁";
+        showPage('testPage');
+    }
+
+    function backToLoginFromLookup() {
+        resetTestSystem();
+        showPage('loginPage');
     }
 
     function setupSecurityRestrictions() {
